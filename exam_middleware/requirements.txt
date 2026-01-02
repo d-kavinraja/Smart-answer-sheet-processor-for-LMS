@@ -1,0 +1,78 @@
+# ==============================
+# FastAPI and Web Framework
+# ==============================
+fastapi
+uvicorn[standard]
+python-multipart
+jinja2
+aiofiles
+
+# ==============================
+# Database
+# ==============================
+sqlalchemy
+asyncpg
+alembic
+psycopg2-binary
+
+# ==============================
+# Authentication and Security
+# ==============================
+python-jose[cryptography]
+passlib[bcrypt]
+cryptography
+
+# ==============================
+# HTTP Client
+# ==============================
+httpx
+aiohttp
+
+# ==============================
+# Redis for Session / Queue Management
+# ==============================
+redis
+aioredis
+
+# ==============================
+# Background Tasks
+# ==============================
+celery
+flower
+
+# ==============================
+# Validation and Settings
+# ==============================
+pydantic
+pydantic-settings
+python-dotenv
+email-validator
+
+# ==============================
+# File Processing
+# ==============================
+python-magic-bin
+pillow
+pypdf
+
+# ==============================
+# Logging and Monitoring
+# ==============================
+structlog
+prometheus-client
+
+# ==============================
+# Performance
+# ==============================
+orjson
+
+# ==============================
+# Testing
+# ==============================
+pytest
+pytest-asyncio
+
+# ==============================
+# Utilities
+# ==============================
+python-dateutil

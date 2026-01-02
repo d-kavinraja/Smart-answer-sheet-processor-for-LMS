@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - Examination Middleware</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #34d399;
+            --success: #10b981;
+            --success-light: #34d399;
+            --warning: #f59e0b;
+            --warning-light: #fbbf24;
+            --danger: #ef4444;
+            --danger-light: #f87171;
+            --purple: #8b5cf6;
+            --purple-light: #a78bfa;
+            
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--gray-900);
+        }
+        
+        h2 { font-size: 1.875rem; }
+        h4 { font-size: 1.5rem; }
+        h5 { font-size: 1.25rem; }
+        
+        /* Navbar */
+        .navbar {
+            background: white !important;
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            padding: 0.875rem 0;
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--gray-900) !important;
+            letter-spacing: -0.025em;
+        }
+        
+        .navbar-brand i {
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+        
+        /* Main Container */
+        .main-container {
+            max-width: 1280px;
+            padding: 2rem 1rem;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        .card-header.bg-primary {
+            background: var(--primary) !important;
+            border: none;
+            color: white !important;
+        }
+        
+        /* Login Card */
+        .login-card {
+            max-width: 460px;
+            margin: 3rem auto;
+            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Welcome Banner */
+        .welcome-banner {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .welcome-banner h2 {
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+        
+        .welcome-banner h2 i {
+            color: var(--warning);
+        }
+        
+        /* Stats */
+        .stats-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 90px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-item.total {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--purple);
+        }
+        
+        .stat-item.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .stat-item.submitted {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .stat-number {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.05em;
+        }
+        
+        /* Paper Cards */
+        .paper-card {
+            animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+            transition: var(--transition);
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .paper-card:nth-child(1) { animation-delay: 0.05s; }
+        .paper-card:nth-child(2) { animation-delay: 0.1s; }
+        .paper-card:nth-child(3) { animation-delay: 0.15s; }
+        .paper-card:nth-child(4) { animation-delay: 0.2s; }
+        .paper-card:nth-child(5) { animation-delay: 0.25s; }
+        .paper-card:nth-child(6) { animation-delay: 0.3s; }
+        
+        .paper-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .paper-preview {
+            height: 180px;
+            background: var(--gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .paper-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        
+        .paper-preview .pdf-icon {
+            font-size: 3.5rem;
+            color: var(--danger);
+        }
+        
+        .card-title {
+            font-weight: 700;
+            color: var(--gray-900);
+            font-size: 1.125rem;
+            letter-spacing: -0.025em;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            font-size: 0.6875rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+        
+        .status-submitted {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+        
+        /* Buttons */
+        .btn {
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            border: none;
+        }
+        
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+            color: white;
+        }
+        
+        .btn-submit:disabled {
+            background: var(--gray-300);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-outline-primary {
+            border: 1px solid var(--primary-light);
+            color: var(--primary);
+            background: white;
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--gray-600);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--gray-700);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-outline-danger {
+            border: 1px solid var(--danger-light);
+            color: var(--danger);
+        }
+        
+        .btn-outline-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+        
+        /* Forms */
+        .form-control {
+            border-radius: 8px;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--gray-300);
+            font-size: 0.9375rem;
+            transition: var(--transition);
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            outline: none;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .input-group-text {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-300);
+            border-right: none;
+            color: var(--gray-500);
+        }
+        
+        .input-group .form-control {
+            border-left: none;
+        }
+        
+        /* Alerts */
+        .alert {
+            border-radius: 8px;
+            border: none;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-left: 3px solid var(--danger);
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border-left: 3px solid var(--warning);
+        }
+        
+        /* Modals */
+        .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .modal-title {
+            font-weight: 700;
+        }
+        
+        .modal-body iframe {
+            border-radius: 8px;
+        }
+        
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+        
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--gray-300);
+        }
+        
+        .empty-state h4 {
+            font-weight: 600;
+            color: var(--gray-600);
+            margin-top: 1.5rem;
+        }
+        
+        /* Moodle Info */
+        .moodle-info {
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            margin-top: 1.5rem;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .moodle-info small {
+            color: var(--primary-dark);
+            font-size: 0.8125rem;
+        }
+        
+        /* Footer */
+        .footer {
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            padding: 3rem 0 1.5rem;
+            margin-top: 4rem;
+        }
+        
+        .footer h5 {
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .footer p,
+        .footer a {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            line-height: 1.8;
+        }
+        
+        .footer a {
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer a:hover {
+            color: var(--primary);
+        }
+        
+        .footer-logo {
+            font-weight: 800;
+            font-size: 1.125rem;
+            color: var(--gray-900);
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.025em;
+        }
+        
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            margin-right: 0.5rem;
+            transition: var(--transition);
+        }
+        
+        .social-links a:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid var(--gray-200);
+            padding-top: 1.5rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+        
+        .footer-bottom p {
+            margin-bottom: 0.25rem;
+            font-size: 0.8125rem;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .welcome-banner {
+                padding: 1.5rem;
+            }
+            
+            .welcome-banner h2 {
+                font-size: 1.5rem;
+            }
+            
+            .stats-row {
+                justify-content: center;
+            }
+            
+            .stat-item {
+                flex: 1;
+                min-width: 75px;
+            }
+        }
+        
+        /* Sections */
+        #loginSection,
+        #dashboardSection {
+            display: none;
+        }
+        
+        #loginSection.active,
+        #dashboardSection.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div>
+            <div class="loading-spinner"></div>
+            <p class="mt-3 fw-medium" style="color: var(--gray-600);">Processing...</p>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-mortarboard-fill me-2"></i>
+                Student Portal
+            </a>
+            <div class="navbar-nav ms-auto align-items-center">
+                <span class="navbar-text me-3" id="userInfo" style="display: none;">
+                    <i class="bi bi-person-circle me-1"></i>
+                    <span id="userName" class="fw-semibold"></span>
+                </span>
+                <button class="btn btn-outline-danger btn-sm" id="logoutBtn" style="display: none;" onclick="logout()">
+                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-container">
+        <!-- Login Section -->
+        <div id="loginSection" class="active">
+            <div class="card login-card">
+                <div class="card-header bg-primary text-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-mortarboard me-2"></i>
+                        Student Login
+                    </h4>
+                    <small class="opacity-90 d-block mt-1">Access your examination portal</small>
+                </div>
+                <div class="card-body p-4">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Moodle Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="username" required placeholder="Enter username">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Moodle Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                <input type="password" class="form-control" id="password" required placeholder="Enter password">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="registerNumber" class="form-label">Register Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                                <input type="text" class="form-control" id="registerNumber" required 
+                                       placeholder="12-digit number" 
+                                       pattern="\d{12}" 
+                                       maxlength="12">
+                            </div>
+                            <small class="text-muted">Enter your 12-digit university register number</small>
+                        </div>
+                        <div id="loginError" class="alert alert-danger" style="display: none;"></div>
+                        <button type="submit" class="btn btn-submit w-100">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Sign In
+                        </button>
+                    </form>
+                    <div class="moodle-info">
+                        <i class="bi bi-shield-check me-2"></i>
+                        <small>Your credentials are securely used to submit papers. We never store your password.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection">
+            <div class="welcome-banner">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2>
+                            <i class="bi bi-hand-wave me-2"></i>
+                            Welcome, <span id="studentName">Student</span>!
+                        </h2>
+                        <p class="text-muted mb-0">View and submit your examination answer sheets</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-row justify-content-end">
+                            <div class="stat-item total">
+                                <div class="stat-number" id="totalPapers">0</div>
+                                <small>Total</small>
+                            </div>
+                            <div class="stat-item pending">
+                                <div class="stat-number" id="pendingPapers">0</div>
+                                <small>Pending</small>
+                            </div>
+                            <div class="stat-item submitted">
+                                <div class="stat-number" id="submittedPapers">0</div>
+                                <small>Submitted</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4" id="papersGrid"></div>
+
+            <div class="card" id="emptyState" style="display: none;">
+                <div class="empty-state">
+                    <i class="bi bi-file-earmark-x"></i>
+                    <h4>No Papers Available</h4>
+                    <p class="text-muted">There are no examination papers assigned to your register number yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Paper Modal -->
+    <div class="modal fade" id="viewPaperModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        <span id="modalPaperTitle">View Paper</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <iframe id="paperFrame" src=""></iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-submit" id="modalSubmitBtn" onclick="submitFromModal()">
+                        <i class="bi bi-cloud-upload me-2"></i>
+                        Submit to Moodle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submission Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-question-circle me-2"></i>
+                        Confirm Submission
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Are you sure you want to submit this paper to Moodle?</p>
+                    <div class="alert alert-warning border-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong> This action will submit your answer sheet to the assignment in Moodle. Please verify your paper before submitting.
+                    </div>
+                    <div id="confirmDetails" class="bg-light p-3 rounded-3">
+                        <p class="mb-2"><strong>Subject:</strong> <span id="confirmSubject" class="text-success"></span></p>
+                        <p class="mb-0"><strong>File:</strong> <span id="confirmFilename"></span></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-submit" id="confirmSubmitBtn" onclick="confirmSubmission()">
+                        <i class="bi bi-check-lg me-2"></i>
+                        Yes, Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div class="modal fade" id="resultModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" id="resultModalHeader">
+                    <h5 class="modal-title" id="resultModalTitle">Submission Result</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-5" id="resultModalBody">
+                    <!-- Result content will be inserted here -->
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-submit px-5" data-bs-dismiss="modal">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="footer-logo">
+                        <i class="bi bi-mortarboard-fill me-2"></i>
+                        Saveetha Engineering College
+                    </div>
+                    <p class="mb-3">
+                        Leading institution dedicated to excellence in technical education and innovation.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5>Quick Links</h5>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="#">About College</a>
+                        <a href="#">Admissions</a>
+                        <a href="#">Departments</a>
+                        <a href="#">Research</a>
+                        <a href="#">Placements</a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5>Resources</h5>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="#">Library</a>
+                        <a href="#">E-Learning</a>
+                        <a href="#">Student Portal</a>
+                        <a href="#">Faculty Portal</a>
+                        <a href="#">Contact</a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5>Contact Info</h5>
+                    <p class="mb-2">
+                        <i class="bi bi-geo-alt-fill me-2 text-primary"></i>
+                        Thandalam, Chennai - 602105<br>
+                        Tamil Nadu, India
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-telephone-fill me-2 text-primary"></i>
+                        +91 44 6681 1000
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-envelope-fill me-2 text-primary"></i>
+                        info@saveetha.ac.in
+                    </p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>
+                    © 2024 Saveetha Engineering College. All rights reserved. | 
+                    <a href="#" class="ms-1">Privacy Policy</a> | 
+                    <a href="#" class="ms-1">Terms of Service</a>
+                </p>
+                <p class="mt-2 text-muted" style="font-size: 0.8rem;">
+                    Examination Middleware System - Department of Artificial Intelligence and Machine Learning
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // State
+        let sessionToken = null;
+        let studentRegNo = null;
+        let papers = [];
+        let currentPaperId = null;
+        
+        // DOM Elements
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        // Check for existing session
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('studentToken');
+            const regNo = localStorage.getItem('studentRegNo');
+            const name = localStorage.getItem('studentName');
+            
+            if (token && regNo) {
+                sessionToken = token;
+                studentRegNo = regNo;
+                
+                try {
+                    showLoading();
+                    showDashboard(name || regNo);
+                    await loadPapers();
+                    hideLoading();
+                } catch (error) {
+                    console.log('Session validation failed:', error);
+                    logout();
+                    hideLoading();
+                }
+            }
+        });
+        
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const registerNumber = document.getElementById('registerNumber').value;
+            
+            showLoading();
+            
+            try {
+                const response = await fetch('/auth/student/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        register_number: registerNumber
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.session_id) {
+                    localStorage.clear();
+                    
+                    sessionToken = data.session_id;
+                    studentRegNo = registerNumber;
+                    
+                    localStorage.setItem('studentToken', sessionToken);
+                    localStorage.setItem('studentRegNo', registerNumber);
+                    localStorage.setItem('studentName', data.full_name || username);
+                    
+                    showDashboard(data.full_name || username);
+                    await loadPapers();
+                } else {
+                    showLoginError(data.detail || 'Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                showLoginError('Connection error. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.style.animation = 'slideUpFade 0.3s ease-out';
+        }
+        
+        function showDashboard(name) {
+            loginSection.classList.remove('active');
+            dashboardSection.classList.add('active');
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('userName').textContent = studentRegNo;
+            document.getElementById('logoutBtn').style.display = 'block';
+            document.getElementById('studentName').textContent = name;
+        }
+        
+        function logout() {
+            sessionToken = null;
+            studentRegNo = null;
+            papers = [];
+            
+            localStorage.removeItem('studentToken');
+            localStorage.removeItem('studentRegNo');
+            localStorage.removeItem('studentName');
+            
+            dashboardSection.classList.remove('active');
+            loginSection.classList.add('active');
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('papersGrid').innerHTML = '';
+        }
+        
+        async function loadPapers() {
+            showLoading();
+            
+            try {
+                const response = await fetch('/student/dashboard', {
+                    headers: {
+                        'X-Session-ID': sessionToken
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const pendingPapers = (data.pending_papers || []).map(p => ({
+                        id: p.artifact_uuid,
+                        artifact_uuid: p.artifact_uuid,
+                        subject_code: p.subject_code,
+                        subject_name: p.subject_name,
+                        original_filename: p.filename,
+                        filename: p.filename,
+                        upload_timestamp: p.uploaded_at,
+                        workflow_status: 'pending',
+                        can_submit: p.can_submit,
+                        message: p.message,
+                        file_extension: p.filename ? p.filename.split('.').pop() : ''
+                    }));
+                    
+                    const submittedPapers = (data.submitted_papers || []).map(p => ({
+                        id: p.artifact_uuid,
+                        artifact_uuid: p.artifact_uuid,
+                        subject_code: p.parsed_subject_code,
+                        original_filename: p.original_filename,
+                        filename: p.original_filename,
+                        upload_timestamp: p.uploaded_at,
+                        submit_timestamp: p.submit_timestamp,
+                        workflow_status: 'submitted_to_moodle',
+                        file_extension: p.original_filename ? p.original_filename.split('.').pop() : ''
+                    }));
+                    
+                    papers = [...pendingPapers, ...submittedPapers];
+                    renderPapers();
+                    updateStats();
+                } else if (response.status === 401) {
+                    logout();
+                } else {
+                    console.error('Failed to load papers:', data);
+                }
+            } catch (error) {
+                console.error('Error loading papers:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function renderPapers() {
+            const grid = document.getElementById('papersGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (papers.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            grid.innerHTML = papers.map(paper => {
+                const isSubmitted = paper.workflow_status === 'submitted_to_moodle';
+                const canSubmit = paper.can_submit !== false;
+                const statusClass = isSubmitted ? 'submitted' : 'pending';
+                const statusText = isSubmitted ? 'Submitted' : 'Pending';
+                
+                const isImage = ['jpg', 'jpeg', 'png'].includes(paper.file_extension?.toLowerCase());
+                const previewContent = isImage 
+                    ? `<img src="/student/paper/${paper.artifact_uuid}/view" alt="Paper preview" onerror="this.parentElement.innerHTML='<i class=\\'bi bi-image text-secondary\\' style=\\'font-size: 5rem;\\'></i>'">` 
+                    : `<i class="bi bi-file-pdf pdf-icon"></i>`;
+                
+                return `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card paper-card h-100">
+                            <div class="paper-preview">
+                                ${previewContent}
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title mb-0">${paper.subject_code}</h5>
+                                    <span class="status-badge status-${statusClass}">${statusText}</span>
+                                </div>
+                                ${paper.subject_name ? `<p class="card-text text-muted small mb-1">${paper.subject_name}</p>` : ''}
+                                <p class="card-text text-muted small">
+                                    <i class="bi bi-file-earmark me-1"></i>
+                                    ${paper.filename || paper.original_filename}
+                                </p>
+                                <p class="card-text text-muted small mb-3">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    Uploaded: ${new Date(paper.upload_timestamp).toLocaleDateString()}
+                                </p>
+                                ${paper.message ? `<p class="text-warning small"><i class="bi bi-exclamation-triangle me-1"></i>${paper.message}</p>` : ''}
+                                <div class="d-flex gap-2 mt-auto">
+                                    <button class="btn btn-outline-primary btn-sm flex-grow-1" onclick="viewPaper('${paper.artifact_uuid}', '${paper.subject_code}', ${isSubmitted})">
+                                        <i class="bi bi-eye me-1"></i> View
+                                    </button>
+                                    ${!isSubmitted ? `
+                                        <button class="btn btn-submit btn-sm flex-grow-1" ${!canSubmit ? 'disabled' : ''} onclick="initSubmission('${paper.artifact_uuid}', '${paper.subject_code}', '${paper.filename || paper.original_filename}')">
+                                            <i class="bi bi-cloud-upload me-1"></i> Submit
+                                        </button>
+                                    ` : `
+                                        <button class="btn btn-success btn-sm flex-grow-1" disabled>
+                                            <i class="bi bi-check-circle me-1"></i> Done
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateStats() {
+            const total = papers.length;
+            const submitted = papers.filter(p => p.workflow_status === 'submitted_to_moodle').length;
+            const pending = total - submitted;
+            
+            document.getElementById('totalPapers').textContent = total;
+            document.getElementById('pendingPapers').textContent = pending;
+            document.getElementById('submittedPapers').textContent = submitted;
+        }
+        
+        function viewPaper(paperId, subjectCode, isSubmitted) {
+            currentPaperId = paperId;
+            
+            document.getElementById('modalPaperTitle').textContent = `${subjectCode} - Answer Sheet`;
+            // Include session token as URL parameter since iframes can't send custom headers
+            document.getElementById('paperFrame').src = `/student/paper/${paperId}/view?session=${encodeURIComponent(sessionToken)}`;
+            document.getElementById('modalSubmitBtn').style.display = isSubmitted ? 'none' : 'block';
+            
+            const modal = new bootstrap.Modal(document.getElementById('viewPaperModal'));
+            modal.show();
+        }
+        
+        function submitFromModal() {
+            if (currentPaperId) {
+                const paper = papers.find(p => p.id === currentPaperId);
+                if (paper) {
+                    initSubmission(paper.id, paper.subject_code, paper.original_filename);
+                }
+            }
+        }
+        
+        function initSubmission(paperId, subjectCode, filename) {
+            currentPaperId = paperId;
+            
+            document.getElementById('confirmSubject').textContent = subjectCode;
+            document.getElementById('confirmFilename').textContent = filename;
+            
+            const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewPaperModal'));
+            if (viewModal) viewModal.hide();
+            
+            const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            confirmModal.show();
+        }
+        
+        async function confirmSubmission() {
+            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+            confirmModal.hide();
+            
+            showLoading();
+            
+            try {
+                const response = await fetch(`/student/submit/${currentPaperId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Session-ID': sessionToken
+                    }
+                });
+                
+                const data = await response.json();
+                
+                hideLoading();
+                
+                if (response.ok && data.success) {
+                    showResult(true, 'Submission Successful!', `
+                        <i class="bi bi-check-circle text-success" style="font-size: 5rem;"></i>
+                        <h4 class="mt-4">Paper Submitted Successfully</h4>
+                        <p class="text-muted">Your answer sheet has been submitted to Moodle.</p>
+                        ${data.moodle_submission_id ? `<small class="text-muted">Submission ID: ${data.moodle_submission_id}</small>` : ''}
+                    `);
+                    
+                    await loadPapers();
+                } else {
+                    showResult(false, 'Submission Failed', `
+                        <i class="bi bi-x-circle text-danger" style="font-size: 5rem;"></i>
+                        <h4 class="mt-4">Submission Failed</h4>
+                        <p class="text-muted">${data.detail || data.message || 'An error occurred during submission.'}</p>
+                    `);
+                }
+            } catch (error) {
+                hideLoading();
+                showResult(false, 'Error', `
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 5rem;"></i>
+                    <h4 class="mt-4">Connection Error</h4>
+                    <p class="text-muted">Failed to connect to the server. Please try again.</p>
+                `);
+            }
+        }
+        
+        function showResult(success, title, content) {
+            const header = document.getElementById('resultModalHeader');
+            header.style.background = success 
+                ? 'linear-gradient(135deg, #059669, #047857)' 
+                : 'linear-gradient(135deg, #dc2626, #b91c1c)';
+            
+            document.getElementById('resultModalTitle').textContent = title;
+            document.getElementById('resultModalBody').innerHTML = content;
+            
+            const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+            resultModal.show();
+        }
+        
+        function showLoading() {
+            loadingOverlay.classList.add('active');
+        }
+        
+        function hideLoading() {
+            loadingOverlay.classList.remove('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal - Examination Middleware</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1d4ed8;
+            --accent-color: #3b82f6;
+            --dark-accent: #1e40af;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--bg-color);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text-primary);
+        }
+        
+        .main-container {
+            max-width: 1280px;
+            padding: 2rem 1.5rem;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s ease;
+        }
+        
+        .card:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .login-card {
+            max-width: 500px;
+            margin: 4rem auto;
+        }
+        
+        .card-header {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 2rem;
+            border: none;
+        }
+        
+        .card-header h4, .card-header h5 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: var(--card-bg) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: var(--primary-color) !important;
+        }
+        
+        /* Stats cards */
+        .stats-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            color: white;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .stats-card:hover {
+            border-color: currentColor;
+        }
+        
+        .stats-card.total { 
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-color: #6366f1;
+        }
+        .stats-card.valid { 
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+        }
+        .stats-card.invalid { 
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: #ef4444;
+        }
+        .stats-card.uploaded { 
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-color: #3b82f6;
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-card small {
+            font-weight: 500;
+            opacity: 0.95;
+            font-size: 0.95rem;
+        }
+        
+        /* Upload zone */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 3.5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f8fafc;
+        }
+        
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--primary-color);
+            background: #eff6ff;
+        }
+        
+        .upload-zone i {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .upload-zone h5 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* File items */
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.2s ease;
+            background: var(--card-bg);
+        }
+        
+        .file-item:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .file-item.valid {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+        
+        .file-item.invalid {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .file-info i {
+            font-size: 1.75rem;
+        }
+        
+        .file-info strong {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:disabled {
+            background: #cbd5e1;
+            transform: none;
+        }
+        
+        .btn-outline-secondary {
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.875rem 2rem;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-outline-secondary:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        
+        .btn-outline-danger {
+            border: 2px solid #fca5a5;
+            color: #dc2626;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-outline-danger:hover {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+        
+        /* Form styles */
+        .form-control {
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .input-group-text {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            color: var(--primary-color);
+        }
+        
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Progress bar */
+        .progress-container {
+            display: none;
+        }
+        
+        .progress-container.active {
+            display: block;
+        }
+        
+        .progress {
+            border-radius: 50px;
+            overflow: hidden;
+            background: #e5e7eb;
+            height: 8px;
+        }
+        
+        .progress-bar {
+            background: var(--primary-color);
+        }
+        
+        /* Alerts */
+        .alert {
+            border-radius: 8px;
+            border: none;
+            padding: 1rem 1.25rem;
+        }
+        
+        .alert-info {
+            background: #eff6ff;
+            color: #1e40af;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .alert-success {
+            background: #f0fdf4;
+            color: #065f46;
+            border-left: 3px solid #10b981;
+        }
+        
+        .alert-danger {
+            background: #fef2f2;
+            color: #991b1b;
+            border-left: 3px solid #ef4444;
+        }
+        
+        .alert-warning {
+            background: #fffbeb;
+            color: #92400e;
+            border-left: 3px solid #f59e0b;
+        }
+        
+        .alert code {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        /* List group for results */
+        .list-group-item {
+            border: 1px solid var(--border-color);
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            background: var(--card-bg);
+            transition: border-color 0.2s ease;
+        }
+        
+        .list-group-item:hover {
+            border-color: var(--primary-color);
+        }
+        
+        /* Sections visibility */
+        #loginSection, #uploadSection {
+            display: none;
+        }
+        
+        #loginSection.active, #uploadSection.active {
+            display: block;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 0 1.5rem;
+            margin-top: 4rem;
+        }
+        
+        .footer h5 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .footer p, .footer a {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+        
+        .footer a {
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .footer a:hover {
+            color: var(--primary-color);
+        }
+        
+        .footer-logo {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .social-links a:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+        
+        .footer-bottom p {
+            margin-bottom: 0;
+            font-size: 0.85rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .stats-card {
+                margin-bottom: 1rem;
+            }
+            
+            .stats-number {
+                font-size: 2rem;
+            }
+            
+            .upload-zone {
+                padding: 2.5rem 1.5rem;
+            }
+            
+            .upload-zone i {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-file-earmark-text-fill me-2"></i>
+                Examination Middleware
+            </a>
+            <div class="navbar-nav ms-auto align-items-center">
+                <span class="navbar-text me-3" id="userInfo" style="display: none;">
+                    <i class="bi bi-person-circle me-1 text-primary"></i>
+                    <span id="userName" class="fw-semibold"></span>
+                </span>
+                <button class="btn btn-outline-danger btn-sm px-3" id="logoutBtn" style="display: none;" onclick="logout()">
+                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-container">
+        <!-- Login Section -->
+        <div id="loginSection" class="active">
+            <div class="card login-card">
+                <div class="card-header text-center">
+                    <h4>
+                        <i class="bi bi-shield-lock-fill me-2"></i>
+                        Staff Login
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                                <input type="text" class="form-control" id="username" required placeholder="Enter your username">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                                <input type="password" class="form-control" id="password" required placeholder="Enter your password">
+                            </div>
+                        </div>
+                        <div id="loginError" class="alert alert-danger" style="display: none;"></div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Login
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection">
+            <div class="row mb-4">
+                <div class="col-md-3 col-6">
+                    <div class="stats-card total">
+                        <div class="stats-number" id="totalFiles">0</div>
+                        <small><i class="bi bi-files me-1"></i>Selected Files</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stats-card valid">
+                        <div class="stats-number" id="validFiles">0</div>
+                        <small><i class="bi bi-check-circle me-1"></i>Valid Files</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stats-card invalid">
+                        <div class="stats-number" id="invalidFiles">0</div>
+                        <small><i class="bi bi-x-circle me-1"></i>Invalid Files</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stats-card uploaded">
+                        <div class="stats-number" id="uploadedFiles">0</div>
+                        <small><i class="bi bi-cloud-check me-1"></i>Total Uploaded</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cloud-upload-fill me-2"></i>
+                        Upload Examination Papers
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Filename Format:</strong> <code>{RegisterNumber}_{SubjectCode}.{pdf|jpg|jpeg|png}</code>
+                        <br>
+                        <small class="d-block mt-1">Example: <code>611221104088_19AI405.pdf</code></small>
+                    </div>
+
+                    <div class="upload-zone" id="uploadZone">
+                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                        <h5 class="mt-2">Drag & Drop Files Here</h5>
+                        <p class="text-muted mb-0">or click to browse your files</p>
+                        <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                    </div>
+
+                    <div class="progress-container mt-4" id="progressContainer">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-semibold">Uploading files...</span>
+                            <span id="progressText" class="fw-bold text-primary">0%</span>
+                        </div>
+                        <div class="progress" style="height: 12px;">
+                            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="file-list mt-4" id="fileList"></div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn btn-primary flex-grow-1" id="uploadBtn" disabled onclick="uploadFiles()">
+                            <i class="bi bi-cloud-upload-fill me-2"></i>
+                            Upload Valid Files
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="clearFiles()">
+                            <i class="bi bi-trash me-2"></i>
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Results -->
+            <div class="card mt-4" id="resultsCard" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>
+                        Upload Results
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div id="uploadResults"></div>
+                </div>
+            </div>
+
+            <!-- Previously Uploaded Files -->
+            <div class="card mt-4" id="pendingFilesCard">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-pdf-fill me-2"></i>
+                        Previously Uploaded Files
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadPendingFiles()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Refresh
+                    </button>
+                </div>
+                <div class="card-body p-4">
+                    <div id="pendingFilesList">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-hourglass-split fs-1"></i>
+                            <p class="mt-2">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="footer-logo">
+                        <i class="bi bi-mortarboard-fill me-2"></i>
+                        Saveetha Engineering College
+                    </div>
+                    <p class="mb-3">
+                        Leading institution dedicated to excellence in technical education and innovation.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5>Quick Links</h5>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="#">About College</a>
+                        <a href="#">Admissions</a>
+                        <a href="#">Departments</a>
+                        <a href="#">Research</a>
+                        <a href="#">Placements</a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5>Resources</h5>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="#">Library</a>
+                        <a href="#">E-Learning</a>
+                        <a href="#">Student Portal</a>
+                        <a href="#">Faculty Portal</a>
+                        <a href="#">Contact</a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5>Contact Info</h5>
+                    <p class="mb-2">
+                        <i class="bi bi-geo-alt-fill me-2 text-primary"></i>
+                        Thandalam, Chennai - 602105<br>
+                        Tamil Nadu, India
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-telephone-fill me-2 text-primary"></i>
+                        +91 44 6681 1000
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-envelope-fill me-2 text-primary"></i>
+                        info@saveetha.ac.in
+                    </p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>
+                    © 2024 Saveetha Engineering College. All rights reserved. | 
+                    <a href="#" class="ms-1">Privacy Policy</a> | 
+                    <a href="#" class="ms-1">Terms of Service</a>
+                </p>
+                <p class="mt-2 text-muted" style="font-size: 0.8rem;">
+                    Examination Middleware System - Department of Artificial Intelligence and Machine Learning
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // State
+        let authToken = null; 
+        let selectedFiles = [];
+        let validatedFiles = [];
+        let serverUploadedCount = 0; // Track server uploaded files
+        
+        // Filename pattern
+        const FILENAME_PATTERN = /^(\d{12})_([A-Z0-9]{2,10})\.(pdf|jpg|jpeg|png)$/i;
+        
+        // DOM Elements
+        const loginSection = document.getElementById('loginSection');
+        const uploadSection = document.getElementById('uploadSection');
+        const loginForm = document.getElementById('loginForm');
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const userInfo = document.getElementById('userInfo');
+        const userName = document.getElementById('userName');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        // Check for existing session
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('authToken');
+            const user = localStorage.getItem('userName');
+            if (token && user) {
+                authToken = token;
+                
+                // Verify token is still valid before showing upload section
+                try {
+                    const response = await fetch('/api/upload/all', {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    if (response.status === 401) {
+                        // Token expired, clear and show login
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('userName');
+                        authToken = null;
+                        return;
+                    }
+                    
+                    // Token valid, show upload section
+                    showUploadSection(user);
+                } catch (error) {
+                    console.error('Session validation error:', error);
+                    // On network error, still try to show upload section
+                    showUploadSection(user);
+                }
+            }
+        });
+        
+        // Login form handler
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+                
+                const response = await fetch('/auth/staff/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.access_token) {
+                    authToken = data.access_token;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('userName', username);
+                    showUploadSection(username);
+                } else {
+                    showLoginError(data.detail || 'Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                showLoginError('Connection error. Please try again.');
+            }
+        });
+        
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.style.animation = 'fadeInUp 0.3s ease-out';
+        }
+        
+        function showUploadSection(user) {
+            loginSection.classList.remove('active');
+            uploadSection.classList.add('active');
+            userInfo.style.display = 'block';
+            userName.textContent = user;
+            logoutBtn.style.display = 'block';
+            // Only load if we haven't already loaded during token validation
+            if (document.getElementById('pendingFilesList').innerHTML.includes('Loading...')) {
+                loadPendingFiles();
+            }
+        }
+        
+        async function loadPendingFiles() {
+            const pendingFilesList = document.getElementById('pendingFilesList');
+            
+            // Check if authToken exists
+            if (!authToken) {
+                pendingFilesList.innerHTML = `
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Please login to view uploaded files.
+                    </div>
+                `;
+                return;
+            }
+            
+            // Show loading state
+            pendingFilesList.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-hourglass-split fs-1"></i>
+                    <p class="mt-2">Loading...</p>
+                </div>
+            `;
+            
+            // Try multiple possible endpoints
+            const possibleEndpoints = [
+                '/upload/all',
+                '/upload/list',
+                '/upload/',
+                '/api/upload/all',
+                '/api/upload/list',
+                '/api/uploads',
+                '/api/artifacts',
+                '/artifacts',
+                '/files',
+                '/api/files'
+            ];
+            
+            let response = null;
+            let successEndpoint = null;
+            
+            for (const endpoint of possibleEndpoints) {
+                try {
+                    const res = await fetch(endpoint, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    if (res.status === 401) {
+                        logout();
+                        return;
+                    }
+                    
+                    if (res.ok) {
+                        response = res;
+                        successEndpoint = endpoint;
+                        console.log('Found working endpoint:', endpoint);
+                        break;
+                    }
+                } catch (e) {
+                    console.log(`Endpoint ${endpoint} failed:`, e.message);
+                }
+            }
+            
+            if (!response) {
+                // Update stats to show we couldn't load server data
+                serverUploadedCount = 0;
+                updateStats();
+                pendingFilesList.innerHTML = `
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Unable to load previously uploaded files. The listing API endpoint may not be available.
+                        <br><small class="text-muted">Files are being uploaded successfully. Check with your administrator for the correct endpoint.</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const data = await response.json();
+                console.log('Pending files response from', successEndpoint, ':', data);
+                
+                // Handle different possible response structures
+                let artifacts = null;
+                let total = 0;
+                
+                if (Array.isArray(data)) {
+                    artifacts = data;
+                    total = data.length;
+                } else if (data.artifacts && Array.isArray(data.artifacts)) {
+                    artifacts = data.artifacts;
+                    total = data.total || data.artifacts.length;
+                } else if (data.files && Array.isArray(data.files)) {
+                    artifacts = data.files;
+                    total = data.total || data.files.length;
+                } else if (data.data && Array.isArray(data.data)) {
+                    artifacts = data.data;
+                    total = data.total || data.data.length;
+                } else if (data.uploads && Array.isArray(data.uploads)) {
+                    artifacts = data.uploads;
+                    total = data.total || data.uploads.length;
+                } else if (data.items && Array.isArray(data.items)) {
+                    artifacts = data.items;
+                    total = data.total || data.items.length;
+                } else if (data.results && Array.isArray(data.results)) {
+                    artifacts = data.results;
+                    total = data.total || data.results.length;
+                }
+                
+                // Update server uploaded count and refresh stats
+                serverUploadedCount = total || (artifacts ? artifacts.length : 0);
+                updateStats();
+                
+                if (artifacts && artifacts.length > 0) {
+                    let html = '<div class="table-responsive"><table class="table table-hover mb-0">';
+                    html += `<thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Register No.</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Uploaded</th>
+                        </tr>
+                    </thead><tbody>`;
+                    
+                    artifacts.forEach(a => {
+                        const statusBadge = getStatusBadge(a.status);
+                        const uploadDate = a.uploaded_at ? new Date(a.uploaded_at).toLocaleString() : 
+                                          (a.created_at ? new Date(a.created_at).toLocaleString() : 
+                                          (a.timestamp ? new Date(a.timestamp).toLocaleString() : '-'));
+                        const filename = a.filename || a.file_name || a.name || a.original_filename || '-';
+                        const regNo = a.register_number || a.reg_no || a.registration_number || a.student_id || '-';
+                        const subCode = a.subject_code || a.sub_code || a.subject || a.course_code || '-';
+                        
+                        html += `
+                            <tr>
+                                <td><i class="bi bi-file-earmark-pdf text-danger me-2"></i>${filename}</td>
+                                <td><span class="badge bg-secondary">${regNo}</span></td>
+                                <td><span class="badge bg-primary">${subCode}</span></td>
+                                <td>${statusBadge}</td>
+                                <td><small class="text-muted">${uploadDate}</small></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table></div>';
+                    html += `<div class="text-muted small mt-3">Showing ${artifacts.length} of ${total} files</div>`;
+                    pendingFilesList.innerHTML = html;
+                } else if (artifacts && artifacts.length === 0) {
+                    pendingFilesList.innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2 mb-0">No files uploaded yet</p>
+                        </div>
+                    `;
+                } else {
+                    console.error('Unexpected response structure:', data);
+                    pendingFilesList.innerHTML = `
+                        <div class="alert alert-warning mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Unexpected response format from server.
+                            <br><small class="text-muted">Response keys: ${Object.keys(data || {}).join(', ') || 'none'}</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Parse error:', error);
+                serverUploadedCount = 0;
+                updateStats();
+                pendingFilesList.innerHTML = `
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Could not parse response: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function getStatusBadge(status) {
+            const statusMap = {
+                'pending': { class: 'bg-warning text-dark', icon: 'hourglass-split', text: 'Pending' },
+                'processing': { class: 'bg-info', icon: 'arrow-repeat', text: 'Processing' },
+                'submitted': { class: 'bg-success', icon: 'check-circle', text: 'Submitted' },
+                'failed': { class: 'bg-danger', icon: 'x-circle', text: 'Failed' },
+                'completed': { class: 'bg-success', icon: 'check2-all', text: 'Completed' }
+            };
+            const s = statusMap[status?.toLowerCase()] || { class: 'bg-secondary', icon: 'question-circle', text: status || 'Unknown' };
+            return `<span class="badge ${s.class}"><i class="bi bi-${s.icon} me-1"></i>${s.text}</span>`;
+        }
+        
+        function logout() {
+            authToken = null;
+            serverUploadedCount = 0; // Reset server count on logout
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userName');
+            uploadSection.classList.remove('active');
+            loginSection.classList.add('active');
+            userInfo.style.display = 'none';
+            logoutBtn.style.display = 'none';
+            clearFiles();
+            // Reset all stats to 0
+            document.getElementById('totalFiles').textContent = '0';
+            document.getElementById('validFiles').textContent = '0';
+            document.getElementById('invalidFiles').textContent = '0';
+            document.getElementById('uploadedFiles').textContent = '0';
+        }
+        
+        // File upload zone handlers
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+        
+        function handleFiles(files) {
+            for (const file of files) {
+                const validation = validateFilename(file.name);
+                const fileObj = {
+                    file: file,
+                    name: file.name,
+                    size: formatFileSize(file.size),
+                    valid: validation.valid,
+                    registerNumber: validation.registerNumber,
+                    subjectCode: validation.subjectCode,
+                    error: validation.error
+                };
+                selectedFiles.push(fileObj);
+            }
+            renderFileList();
+            updateStats();
+        }
+        
+        function validateFilename(filename) {
+            const match = filename.match(FILENAME_PATTERN);
+            if (match) {
+                return {
+                    valid: true,
+                    registerNumber: match[1],
+                    subjectCode: match[2].toUpperCase()
+                };
+            }
+            return {
+                valid: false,
+                error: 'Invalid filename format. Expected: {12-digit RegNo}_{SubjectCode}.{pdf|jpg|jpeg|png}'
+            };
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function renderFileList() {
+            fileList.innerHTML = selectedFiles.map((f, index) => `
+                <div class="file-item ${f.valid ? 'valid' : 'invalid'}">
+                    <div class="file-info">
+                        <i class="bi ${f.valid ? 'bi-file-earmark-check-fill text-success' : 'bi-file-earmark-x-fill text-danger'}"></i>
+                        <div>
+                            <strong>${f.name}</strong>
+                            <br>
+                            <small class="text-muted">${f.size}</small>
+                            ${f.valid ? `<br><small class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>Reg: ${f.registerNumber} | Subject: ${f.subjectCode}</small>` : `<br><small class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>${f.error}</small>`}
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        function updateStats() {
+            const total = selectedFiles.length;
+            const valid = selectedFiles.filter(f => f.valid).length;
+            const invalid = total - valid;
+            
+            // Animate the number changes
+            animateNumber('totalFiles', total);
+            animateNumber('validFiles', valid);
+            animateNumber('invalidFiles', invalid);
+            animateNumber('uploadedFiles', serverUploadedCount);
+            
+            uploadBtn.disabled = valid === 0;
+            validatedFiles = selectedFiles.filter(f => f.valid);
+        }
+        
+        function animateNumber(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseInt(element.textContent) || 0;
+            
+            if (currentValue === targetValue) return;
+            
+            const duration = 300; // ms
+            const steps = 10;
+            const stepDuration = duration / steps;
+            const increment = (targetValue - currentValue) / steps;
+            
+            let step = 0;
+            const timer = setInterval(() => {
+                step++;
+                if (step >= steps) {
+                    element.textContent = targetValue;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.round(currentValue + (increment * step));
+                }
+            }, stepDuration);
+        }
+        
+        function clearFiles() {
+            selectedFiles = [];
+            validatedFiles = [];
+            fileList.innerHTML = '';
+            updateStats();
+            document.getElementById('resultsCard').style.display = 'none';
+        }
+        
+        async function uploadFiles() {
+            if (validatedFiles.length === 0) return;
+            
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const resultsCard = document.getElementById('resultsCard');
+            const uploadResults = document.getElementById('uploadResults');
+            
+            progressContainer.classList.add('active');
+            uploadBtn.disabled = true;
+            
+            const formData = new FormData();
+            validatedFiles.forEach(f => {
+                formData.append('files', f.file);
+            });
+            formData.append('exam_session', new Date().toISOString().split('T')[0].replace(/-/g, ''));
+            
+            try {
+                const response = await fetch('/upload/bulk', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                // Handle token expiration
+                if (response.status === 401) {
+                    uploadResults.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Session expired. Please login again.
+                        </div>
+                    `;
+                    resultsCard.style.display = 'block';
+                    setTimeout(() => logout(), 2000);
+                    return;
+                }
+                
+                if (response.ok) {
+                    document.getElementById('uploadedFiles').textContent = data.successful || 0;
+                    
+                    let resultsHtml = `
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            Successfully uploaded <strong>${data.successful}</strong> of <strong>${data.total_files}</strong> files
+                        </div>
+                    `;
+                    
+                    if (data.results && data.results.length > 0) {
+                        resultsHtml += '<div class="list-group">';
+                        data.results.forEach(r => {
+                            const icon = r.success ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
+                            resultsHtml += `
+                                <div class="list-group-item d-flex align-items-center">
+                                    <i class="${icon} me-3" style="font-size: 1.25rem;"></i>
+                                    <strong class="flex-grow-1">${r.filename}</strong>
+                                    ${r.success ? '<span class="badge bg-success px-3 py-2">Uploaded</span>' : `<span class="badge bg-danger px-3 py-2">Failed: ${r.error}</span>`}
+                                </div>
+                            `;
+                        });
+                        resultsHtml += '</div>';
+                    }
+                    
+                    uploadResults.innerHTML = resultsHtml;
+                    // Reload pending files after successful upload
+                    loadPendingFiles();
+                } else {
+                    uploadResults.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Upload failed: ${data.detail || 'Unknown error'}
+                        </div>
+                    `;
+                }
+                
+                resultsCard.style.display = 'block';
+            } catch (error) {
+                uploadResults.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Connection error: ${error.message}
+                    </div>
+                `;
+                resultsCard.style.display = 'block';
+            } finally {
+                setTimeout(() => {
+                    progressContainer.classList.remove('active');
+                    uploadBtn.disabled = false;
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
