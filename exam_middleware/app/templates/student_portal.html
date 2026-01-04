@@ -411,7 +411,12 @@
         }
         
         .modal-body iframe {
+            display: block;
+            width: 100%;
+            height: min(75vh, 720px);
+            border: 0;
             border-radius: 8px;
+            background: var(--gray-100);
         }
         
         /* Loading */
@@ -601,6 +606,7 @@
             display: block;
         }
     </style>
+    <link href="/static/css/style.css" rel="stylesheet">
 </head>
 <body>
     <div class="loading-overlay" id="loadingOverlay">
@@ -1215,5 +1221,40 @@
             loadingOverlay.classList.remove('active');
         }
     </script>
+    <!-- Loader Overlay -->
+    <div class="loader-overlay" id="loaderOverlay">
+        <div class="spinner">
+            <div></div>   
+            <div></div>    
+            <div></div>    
+            <div></div>    
+            <div></div>    
+            <div></div>    
+            <div></div>    
+            <div></div>    
+            <div></div>    
+            <div></div>    
+        </div>
+    </div>
+<script>
+    // Loader functionality
+    const loginForm = document.getElementById('loginForm');
+    const loaderOverlay = document.getElementById('loaderOverlay');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Show loader
+            loaderOverlay.classList.add('active');
+
+            // Artificial delay (2 seconds) before proceeding with login
+            setTimeout(function() {
+                // Original form submission logic goes here
+                // For now, we'll just proceed with the existing login function
+                loginForm.submit();
+            }, 2000);
+        });
+    }</script>
 </body>
 </html>

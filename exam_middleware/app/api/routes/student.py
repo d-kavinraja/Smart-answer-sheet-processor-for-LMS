@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 import logging
 import os
+from pathlib import Path
 
 from app.db.database import get_db
 from app.db.models import StudentSession
@@ -29,18 +30,132 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-async def get_session_from_header(
-    x_session_id: str = Header(..., alias="X-Session-ID"),
-    db: AsyncSession = Depends(get_db)
+def _get_session_register_number(session: StudentSession) -> str:
+    import re
+
+    register_number = session.register_number
+    if not register_number and session.moodle_fullname:
+        match = re.search(r"\b(\d{12})\b", session.moodle_fullname)
+        if match:
+            register_number = match.group(1)
+
+    return register_number or session.moodle_username
+
+
+def _resolve_artifact_file_path(
+    file_blob_path: str,
+    original_filename: str,
+    parsed_reg_no: Optional[str] = None,
+    parsed_subject_code: Optional[str] = None,
+) -> Optional[str]:
+    """Resolve an artifact file path robustly across relative/Windows paths.
+
+    The DB may contain a relative path (e.g. ./uploads/...) or a stale path.
+    This attempts safe resolutions within the project directory.
+    """
+    base_dir = Path(__file__).resolve().parents[3]  # .../exam_middleware
+
+    candidates: list[Path] = []
+
+    if file_blob_path:
+        raw = Path(os.path.normpath(file_blob_path))
+        candidates.append(raw)
+        # If it is a relative path, also try resolving from the project root
+        if not raw.is_absolute():
+            candidates.append((base_dir / raw).resolve())
+            # Common case: stored as "./uploads/..." with a leading "./"
+            if str(raw).startswith("./") or str(raw).startswith(".\\"):
+                candidates.append((base_dir / str(raw)[2:]).resolve())
+
+    blob_name = Path(file_blob_path).name if file_blob_path else ""
+    orig_name = Path(original_filename).name if original_filename else ""
+
+    # Search in known upload directories only
+    search_dirs = [
+        base_dir / "uploads" / "pending",
+        base_dir / "uploads" / "processed",
+        base_dir / "uploads" / "failed",
+        base_dir / "uploads" / "temp",
+        base_dir / "uploads",
+        base_dir / "storage" / "uploads" / "pending",
+        base_dir / "storage" / "uploads" / "processed",
+        base_dir / "storage" / "uploads" / "failed",
+        base_dir / "storage" / "uploads" / "temp",
+        base_dir / "storage" / "uploads",
+        base_dir,
+    ]
+
+    for d in search_dirs:
+        if blob_name:
+            candidates.append(d / blob_name)
+        if orig_name and orig_name != blob_name:
+            candidates.append(d / orig_name)
+
+    # Last-resort: reconstruct standard filename pattern used by uploads
+    # Example: 212222240047_19AI405.pdf
+    if parsed_reg_no and parsed_subject_code:
+        # Try common allowed extensions without expensive recursion
+        for ext in (".pdf", ".jpg", ".jpeg", ".png"):
+            guessed = f"{parsed_reg_no}_{parsed_subject_code}{ext}"
+            candidates.append(base_dir / guessed)
+            candidates.append(base_dir / "uploads" / "pending" / guessed)
+            candidates.append(base_dir / "uploads" / "processed" / guessed)
+            candidates.append(base_dir / "uploads" / "failed" / guessed)
+            candidates.append(base_dir / "uploads" / "temp" / guessed)
+            candidates.append(base_dir / "uploads" / guessed)
+
+    for p in candidates:
+        try:
+            if p and p.exists() and p.is_file():
+                return str(p)
+        except OSError:
+            continue
+
+    # Very last-resort: glob match in a few small directories (non-recursive)
+    if parsed_reg_no and parsed_subject_code:
+        pattern = f"{parsed_reg_no}_{parsed_subject_code}.*"
+        for d in [
+            base_dir,
+            base_dir / "uploads",
+            base_dir / "uploads" / "pending",
+            base_dir / "uploads" / "processed",
+            base_dir / "uploads" / "failed",
+            base_dir / "uploads" / "temp",
+        ]:
+            try:
+                if d.exists() and d.is_dir():
+                    for hit in d.glob(pattern):
+                        if hit.is_file():
+                            return str(hit)
+            except OSError:
+                continue
+
+    return None
+
+
+async def get_student_session(
+    x_session_id: Optional[str] = Header(None, alias="X-Session-ID"),
+    session: Optional[str] = Query(None, alias="session"),
+    db: AsyncSession = Depends(get_db),
 ) -> StudentSession:
-    """Get student session from header"""
-    return await get_current_student_session(x_session_id, db)
+    """Get student session from header or query.
+
+    - Use `X-Session-ID` header for normal `fetch()` requests.
+    - Use `?session=...` for iframe/preview URLs (iframes can't send custom headers).
+    """
+    session_id = x_session_id or session
+    if not session_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="X-Session-ID header or session query parameter required",
+        )
+    return await get_current_student_session(session_id, db)
 
 
 @router.get("/dashboard", response_model=StudentDashboardResponse)
 async def get_dashboard(
     request: Request,
-    session: StudentSession = Depends(get_session_from_header),
+    session: StudentSession = Depends(get_student_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -134,7 +249,7 @@ async def get_dashboard(
 @router.get("/paper/{artifact_uuid}")
 async def get_paper_details(
     artifact_uuid: str,
-    session: StudentSession = Depends(get_session_from_header),
+    session: StudentSession = Depends(get_student_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -151,10 +266,11 @@ async def get_paper_details(
             detail="Paper not found"
         )
     
-    # Security check
-    if artifact.parsed_reg_no != session.moodle_username:
+    # Security check (match against the student's register number)
+    session_reg_no = _get_session_register_number(session)
+    if artifact.parsed_reg_no != session_reg_no:
         logger.warning(
-            f"Unauthorized access attempt: {session.moodle_username} tried to access "
+            f"Unauthorized access attempt: {session_reg_no} tried to access "
             f"paper belonging to {artifact.parsed_reg_no}"
         )
         raise HTTPException(
@@ -191,7 +307,7 @@ async def get_paper_details(
 @router.get("/paper/{artifact_uuid}/view")
 async def view_paper_file(
     artifact_uuid: str,
-    session: StudentSession = Depends(get_session_from_header),
+    session: StudentSession = Depends(get_student_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -208,27 +324,43 @@ async def view_paper_file(
             detail="Paper not found"
         )
     
-    # Security check
-    if artifact.parsed_reg_no != session.moodle_username:
+    # Security check (match against the student's register number)
+    session_reg_no = _get_session_register_number(session)
+    if artifact.parsed_reg_no != session_reg_no:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only view your own papers"
         )
     
-    # Check if file exists
-    if not os.path.exists(artifact.file_blob_path):
+    resolved_path = _resolve_artifact_file_path(
+        artifact.file_blob_path,
+        artifact.original_filename,
+        parsed_reg_no=artifact.parsed_reg_no,
+        parsed_subject_code=artifact.parsed_subject_code,
+    )
+    if not resolved_path:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="File not found on server"
         )
+
+    # Self-heal: update stored blob path if it was stale
+    try:
+        if artifact.file_blob_path != resolved_path:
+            artifact.file_blob_path = resolved_path.replace('\\', '/')
+            await db.commit()
+    except Exception:
+        await db.rollback()
     
     # Determine media type
     media_type = artifact.mime_type or "application/pdf"
     
+    safe_name = (artifact.original_filename or "paper").replace('"', "")
     return FileResponse(
-        path=artifact.file_blob_path,
+        path=resolved_path,
         media_type=media_type,
-        filename=artifact.original_filename
+        filename=safe_name,
+        headers={"Content-Disposition": f'inline; filename="{safe_name}"'},
     )
 
 
@@ -236,7 +368,7 @@ async def view_paper_file(
 async def submit_paper_by_uuid(
     artifact_uuid: str,
     request: Request,
-    session: StudentSession = Depends(get_session_from_header),
+    session: StudentSession = Depends(get_student_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -309,7 +441,7 @@ async def submit_paper_by_uuid(
 async def submit_paper(
     submission: SubmissionRequest,
     request: Request,
-    session: StudentSession = Depends(get_session_from_header),
+    session: StudentSession = Depends(get_student_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -396,7 +528,7 @@ async def submit_paper(
 @router.get("/submission/{artifact_uuid}/status")
 async def get_submission_status(
     artifact_uuid: str,
-    session: StudentSession = Depends(get_session_from_header),
+    session: StudentSession = Depends(get_student_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -412,7 +544,8 @@ async def get_submission_status(
         )
     
     # Security check
-    if artifact.parsed_reg_no != session.moodle_username:
+    session_reg_no = _get_session_register_number(session)
+    if artifact.parsed_reg_no != session_reg_no:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only view your own submissions"
@@ -431,7 +564,7 @@ async def get_submission_status(
 @router.get("/history")
 async def get_submission_history(
     limit: int = Query(default=20, le=100),
-    session: StudentSession = Depends(get_session_from_header),
+    session: StudentSession = Depends(get_student_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
