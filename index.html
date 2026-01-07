@@ -7,6 +7,12 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
             /* HYPER-GLASS PALETTE */
             --bg-deep: #030712;
@@ -24,6 +30,11 @@
             --glow-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
         }
 
+        html {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
         body {
             background-color: var(--bg-deep);
             color: var(--text-primary);
@@ -35,6 +46,8 @@
             flex-direction: column;
             overflow-x: hidden;
             position: relative;
+            width: 100vw;
+            box-sizing: border-box;
         }
 
         /* --- BACKGROUND FX --- */
@@ -68,7 +81,7 @@
         .navbar-container {
             position: fixed; top: 20px; left: 0; right: 0;
             display: flex; justify-content: center; z-index: 1000;
-            padding: 0 1rem; /* Prevent edge touching */
+            padding: 0 1rem;
             animation: slide-down 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
@@ -112,17 +125,29 @@
 
         /* --- MAIN LAYOUT --- */
         .main-content {
-            /* Reduced margin to fix "Huge Space" */
-            margin-top: 100px; 
-            padding: 0 2rem 4rem;
+            margin-top: 100px;
+            padding: 0 1rem 4rem;
             max-width: 1200px;
-            margin-left: auto; margin-right: auto;
-            width: 100%; box-sizing: border-box; flex-grow: 1;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            box-sizing: border-box;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         section {
             scroll-margin-top: 120px;
             margin-bottom: 5rem;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 1rem;
         }
 
         /* --- GLASS CARDS --- */
@@ -131,16 +156,17 @@
             backdrop-filter: blur(12px);
             border: var(--glass-border);
             border-radius: 24px;
-            padding: 2rem;
+            padding: 1.5rem;
             position: relative;
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            /* Removed fixed margin-bottom to let Grid handle spacing */
-            height: 100%; 
+            height: 100%;
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
             animation: fade-up 0.8s ease-out backwards;
+            width: 100%;
+            text-align: center;
         }
         
         .glass-card:nth-child(1) { animation-delay: 0.1s; }
@@ -166,13 +192,18 @@
         }
 
         /* --- TYPOGRAPHY --- */
-        h1 { 
-            font-size: clamp(2.5rem, 5vw, 4rem); 
-            font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem;
+        h1 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
             background: linear-gradient(to bottom right, #fff 30%, #94a3b8);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             text-shadow: 0 0 30px rgba(255,255,255,0.1);
             animation: float-text 6s ease-in-out infinite;
+            text-align: center;
+            width: 100%;
         }
         
         @keyframes float-text {
@@ -180,29 +211,45 @@
             50% { transform: translateY(-5px); }
         }
 
-        h2 { font-size: 2rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; color: #fff; }
+        h2 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            color: #fff;
+            width: 100%;
+            text-align: center;
+        }
         h2::before { content: ''; width: 4px; height: 32px; background: var(--neon-blue); border-radius: 2px; box-shadow: 0 0 10px var(--neon-blue); }
-        p { color: #94a3b8; line-height: 1.6; font-size: 1rem; max-width: 65ch; margin-bottom: 1.5rem; }
+        p { color: #94a3b8; line-height: 1.6; font-size: clamp(0.875rem, 2.5vw, 1rem); max-width: 65ch; margin-bottom: 1.5rem; text-align: center; margin-left: auto; margin-right: auto; }
 
         /* --- LAYOUT UTILITIES --- */
         .auto-grid {
             display: grid;
-            /* Improved grid logic to prevent cards cutting off */
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
             width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            justify-items: center;
         }
 
         /* --- 3D DEMO AREA --- */
         #demo-container {
-            display: grid; 
-            grid-template-columns: 320px 1fr; 
+            display: grid;
+            grid-template-columns: 320px 1fr;
             gap: 2rem;
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 24px; padding: 2rem; 
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 1.5rem;
             min-height: 600px;
             height: auto;
             animation: zoom-in 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+            box-sizing: border-box;
         }
         
         @keyframes zoom-in {
@@ -300,7 +347,7 @@
         .stamp.visible { transform: translate(-50%, -50%) scale(1) rotate(-15deg); opacity: 1; }
 
         /* --- TECH STACK GRID --- */
-        .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; }
+        .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; width: 100%; max-width: 1200px; margin: 0 auto; justify-items: center; }
         .tech-card {
             background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
             border-radius: 16px; padding: 1.5rem; text-align: center; position: relative; overflow: hidden;
@@ -316,6 +363,8 @@
             background: #0f172a; border-radius: 12px; border: 1px solid #334155;
             font-family: 'JetBrains Mono', monospace; padding: 0; overflow: hidden;
             max-width: 100%;
+            width: 100%;
+            margin: 0 auto;
         }
         .terminal-header {
             background: #1e293b; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem;
@@ -327,7 +376,7 @@
         .cmd { color: var(--neon-green); margin-right: 0.5rem; user-select: none; } .comment { color: #64748b; }
 
         /* --- SCHEMA & API --- */
-        .schema-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+        .schema-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; width: 100%; max-width: 1200px; margin: 0 auto; justify-items: center; }
         .db-card {
             background: rgba(0,0,0,0.3); border-radius: 16px; padding: 1.5rem;
             border: 1px solid rgba(255,255,255,0.05); position: relative;
@@ -388,12 +437,45 @@
             .logo-subtitle-short { display: inline-block !important; }
         }
 
-        /* Fix for mobile grid blowouts */
+        /* Tablet and small desktop */
+        @media (max-width: 768px) {
+            .main-content { padding: 0 1rem 3rem; margin-top: 80px; text-align: center; }
+            section { text-align: center; align-items: center; }
+            #demo-container { grid-template-columns: 1fr; padding: 1rem; }
+            .glass-card { padding: 1.5rem; text-align: center; }
+            h2 { font-size: 1.5rem; justify-content: center; }
+        }
+
+        /* Mobile devices */
         @media (max-width: 600px) {
-            .auto-grid, .schema-grid, .tech-grid { grid-template-columns: 1fr; }
-            .main-content { padding: 0 1rem 2rem; }
-            .paper-sheet { width: 100%; height: 400px; }
-            .navbar-container { top: 10px; }
+            body { width: 100vw; overflow-x: hidden; }
+            .navbar-container { display: none !important; }
+            .auto-grid, .schema-grid, .tech-grid { grid-template-columns: 1fr; gap: 1rem; justify-items: center; width: 100%; }
+            .main-content { padding: 1rem; margin-top: 1rem; text-align: center; width: 100%; max-width: 100%; }
+            section { padding: 0 1rem; text-align: center; align-items: center; width: 100%; max-width: 100%; }
+            .glass-card { padding: 1rem; border-radius: 16px; max-width: 100%; text-align: center; width: 100%; box-sizing: border-box; }
+            .paper-sheet { width: 100%; max-width: 280px; height: auto; min-height: 350px; margin: 0 auto; }
+            h1 { font-size: 1.75rem; margin-bottom: 1rem; text-align: center; padding: 0; width: 100%; }
+            h2 { font-size: 1.25rem; margin-bottom: 1.5rem; text-align: center; justify-content: center; width: 100%; }
+            #demo-container { padding: 0.75rem; gap: 1rem; min-height: auto; width: 100%; box-sizing: border-box; }
+            .terminal { font-size: 0.8rem; width: 100%; }
+            .terminal-body { padding: 1rem; font-size: 0.75rem; }
+            p { font-size: 0.875rem; text-align: center; padding: 0; width: 100%; }
+            h3 { text-align: center; width: 100%; }
+        }
+
+        /* Extra small mobile devices */
+        @media (max-width: 400px) {
+            body { width: 100vw; overflow-x: hidden; }
+            .navbar-container { display: none !important; }
+            .main-content { padding: 0.75rem; margin-top: 0.5rem; text-align: center; width: 100%; max-width: 100%; }
+            section { padding: 0 0.75rem; text-align: center; align-items: center; width: 100%; max-width: 100%; }
+            .glass-card { padding: 0.75rem; max-width: 100%; text-align: center; width: 100%; box-sizing: border-box; }
+            h1 { font-size: 1.5rem; text-align: center; padding: 0; width: 100%; }
+            h2 { font-size: 1.1rem; text-align: center; justify-content: center; width: 100%; }
+            .navbar { padding: 0.5rem 0.75rem; }
+            p { font-size: 0.8rem; text-align: center; padding: 0; width: 100%; }
+            h3 { font-size: 1rem; text-align: center; width: 100%; }
         }
         
         .logo-subtitle-short { display: none; }
