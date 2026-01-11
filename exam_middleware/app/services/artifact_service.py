@@ -331,6 +331,7 @@ class ArtifactService:
         logger.info(f"Artifact {artifact_id} marked as submitted")
         return artifact
     
+    
     async def mark_failed(
         self,
         artifact_id: int,
