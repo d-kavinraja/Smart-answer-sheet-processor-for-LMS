@@ -5,7 +5,7 @@ Business logic for managing examination artifacts
 
 import logging
 from typing import Optional, List, Dict, Any, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, and_, or_
 from sqlalchemy.orm import selectinload
@@ -286,6 +286,12 @@ class ArtifactService:
         
         await self.db.flush()
         await self.db.refresh(artifact)
+        # Persist immediately so other requests see the uploading state
+        try:
+            await self.db.commit()
+        except Exception:
+            await self.db.rollback()
+            raise
         return artifact
     
     async def mark_submitted(
@@ -300,8 +306,10 @@ class ArtifactService:
             return None
         
         artifact.workflow_status = WorkflowStatus.COMPLETED
-        artifact.submit_timestamp = datetime.utcnow()
-        artifact.completed_at = datetime.utcnow()
+        # Use timezone-aware UTC timestamps
+        now = datetime.now(timezone.utc)
+        artifact.submit_timestamp = now
+        artifact.completed_at = now
         # Ensure moodle_submission_id is a string (database column is VARCHAR)
         artifact.moodle_submission_id = str(moodle_submission_id) if moodle_submission_id is not None else None
         artifact.lms_transaction_id = lms_transaction_id
@@ -313,7 +321,13 @@ class ArtifactService:
         
         await self.db.flush()
         await self.db.refresh(artifact)
-        
+        # Persist immediately so submission time is stored
+        try:
+            await self.db.commit()
+        except Exception:
+            await self.db.rollback()
+            raise
+
         logger.info(f"Artifact {artifact_id} marked as submitted")
         return artifact
     
@@ -349,7 +363,13 @@ class ArtifactService:
         
         await self.db.flush()
         await self.db.refresh(artifact)
-        
+        # Persist failure state immediately
+        try:
+            await self.db.commit()
+        except Exception:
+            await self.db.rollback()
+            raise
+
         return artifact
     
     async def get_all_pending(

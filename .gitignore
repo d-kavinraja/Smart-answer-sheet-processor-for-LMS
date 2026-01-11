@@ -1,1 +1,12 @@
-.venv
+# Python cache
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Uploads / runtime data
+exam_middleware/uploads/
+
+# Virtual environment
+venv/
