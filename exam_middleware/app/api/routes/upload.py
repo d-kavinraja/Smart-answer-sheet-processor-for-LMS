@@ -3,7 +3,7 @@ Upload API Routes
 Handles file uploads from staff
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
@@ -19,6 +19,7 @@ from app.schemas import (
 from app.services.file_processor import file_processor
 from app.services.artifact_service import ArtifactService, AuditService
 from app.api.routes.auth import get_current_staff
+from app.db.models import WorkflowStatus
 
 logger = logging.getLogger(__name__)
 
@@ -247,6 +248,7 @@ async def upload_bulk_files(
 async def get_all_uploads(
     limit: int = 50,
     offset: int = 0,
+    include_deleted: bool = Query(default=False, description="Include artifacts marked as DELETED"),
     db: AsyncSession = Depends(get_db),
     current_staff: StaffUser = Depends(get_current_staff)
 ):
@@ -255,7 +257,11 @@ async def get_all_uploads(
     """
     artifact_service = ArtifactService(db)
     artifacts, total = await artifact_service.get_all_artifacts(limit=limit, offset=offset)
+    audit_service = AuditService(db)
     
+    # Filter out DELETED artifacts by default
+    filtered = [a for a in artifacts if not (a.workflow_status == WorkflowStatus.DELETED and not include_deleted)]
+
     return {
         "total": total,
         "limit": limit,
@@ -267,9 +273,10 @@ async def get_all_uploads(
                 "register_number": a.parsed_reg_no,
                 "subject_code": a.parsed_subject_code,
                 "status": a.workflow_status.value,
-                "uploaded_at": a.uploaded_at.isoformat() if a.uploaded_at else None
+                "uploaded_at": a.uploaded_at.isoformat() if a.uploaded_at else None,
+                "report_count": len([l for l in (await audit_service.get_for_artifact(a.id)) if (l.action == 'report_issue' or l.action_category == 'report')])
             }
-            for a in artifacts
+            for a in filtered
         ]
     }
 
@@ -286,6 +293,7 @@ async def get_pending_uploads(
     """
     artifact_service = ArtifactService(db)
     artifacts, total = await artifact_service.get_all_pending(limit=limit, offset=offset)
+    audit_service = AuditService(db)
     
     return {
         "total": total,
@@ -298,7 +306,8 @@ async def get_pending_uploads(
                 "register_number": a.parsed_reg_no,
                 "subject_code": a.parsed_subject_code,
                 "status": a.workflow_status.value,
-                "uploaded_at": a.uploaded_at.isoformat() if a.uploaded_at else None
+                "uploaded_at": a.uploaded_at.isoformat() if a.uploaded_at else None,
+                "report_count": len([l for l in (await audit_service.get_for_artifact(a.id)) if (l.action == 'report_issue' or l.action_category == 'report')])
             }
             for a in artifacts
         ]

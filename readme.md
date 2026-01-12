@@ -9,6 +9,40 @@
 
 ---
 
+## ⚠️ Recent updates (2026-01-12)
+
+The codebase has received several maintenance and UX updates to improve safety, auditing and staff workflows. Highlights:
+
+- New maintenance scripts:
+   - `setup_username_reg.py` — upsert a single Moodle `username -> register_number` mapping. Useful to seed or correct mappings used during student login and pending-list authorization. Example:
+
+      ```bash
+      # interactive
+      python setup_username_reg.py
+
+      # direct
+      python setup_username_reg.py --username 22007928 --register 212222240047
+      ```
+
+   - `setup_subject_mapping.py` — interactive workflow to find an assignment by course-module-id (CMID) in Moodle, create or update a `SubjectMapping`, and optionally fix existing artifacts that reference the wrong assignment id.
+
+- Staff UI changes:
+   - `app/templates/staff_upload.html` now contains a Reports modal (view/resolve/edit/delete reports) and improved listing behaviour.
+   - The `Total Uploaded` stat is computed from the visible (non-deleted) artifacts returned by the listing endpoint, so the navbar count now matches the visible table ("Showing X of Y files").
+   - Client-side behaviour was hardened: the student/staff login flows no longer call `localStorage.clear()`; only session keys are removed on logout.
+
+- Backend/service changes (important for deploy and troubleshooting):
+   - `app/services/artifact_service.py` was hardened to explicitly catch `IntegrityError` on DB flush/commit and to rollback safely. This reduces silent failures for duplicate transaction IDs.
+   - `get_pending_for_student()` requires either a valid 12-digit `register_number` OR both `moodle_user_id` and `moodle_username`. This prevents ambiguous or leaking results when student identity is unclear.
+   - Admin remediation: if a deterministic `transaction_id` collides with an existing (deleted/archived) artifact, clearing or nulling the `transaction_id` in the DB row will allow a re-upload. Use the `audit_logs` and `ExaminationArtifact` table to locate problematic rows before manual edits.
+
+- API and client notes:
+   - Staff UI attempts multiple common listing endpoints (e.g. `/api/upload/all`, `/upload/all`, `/api/artifacts`) to be resilient against different backend deployments. Prefer endpoints that return an array of `artifacts` for best UI compatibility.
+   - Consider returning HTTP 409 for DB integrity conflicts (duplicate transaction / unique constraint) so the client can surface a clear message instead of a generic 500.
+
+---
+
+
 ##  The Problem Statement
 
 In academic institutions transitioning to digital grading, handling physical answer scripts presents significant logistical challenges:
@@ -82,7 +116,7 @@ The database is designed for data integrity and auditability. Key models include
 - Moodle LMS with Web Services enabled
 - Redis (optional, for background tasks)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone and Setup
 
