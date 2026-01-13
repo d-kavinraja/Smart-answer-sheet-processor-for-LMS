@@ -262,22 +262,28 @@ async def get_all_uploads(
     # Filter out DELETED artifacts by default
     filtered = [a for a in artifacts if not (a.workflow_status == WorkflowStatus.DELETED and not include_deleted)]
 
+    artifacts_list = []
+    for a in filtered:
+        logs = await audit_service.get_for_artifact(a.id)
+        deleted_targets = {str(l.target_id) for l in logs if l.action == 'report_deleted'}
+        resolved_targets = {str(l.target_id) for l in logs if l.action == 'report_resolved'}
+        # Count only ACTIVE reports (not withdrawn, not resolved)
+        report_count = sum(1 for l in logs if l.action == 'report_issue' and str(l.id) not in deleted_targets and str(l.id) not in resolved_targets)
+        artifacts_list.append({
+            "artifact_uuid": str(a.artifact_uuid),
+            "filename": a.original_filename,
+            "register_number": a.parsed_reg_no,
+            "subject_code": a.parsed_subject_code,
+            "status": a.workflow_status.value,
+            "uploaded_at": a.uploaded_at.isoformat() if a.uploaded_at else None,
+            "report_count": report_count
+        })
+
     return {
         "total": total,
         "limit": limit,
         "offset": offset,
-        "artifacts": [
-            {
-                "artifact_uuid": str(a.artifact_uuid),
-                "filename": a.original_filename,
-                "register_number": a.parsed_reg_no,
-                "subject_code": a.parsed_subject_code,
-                "status": a.workflow_status.value,
-                "uploaded_at": a.uploaded_at.isoformat() if a.uploaded_at else None,
-                "report_count": len([l for l in (await audit_service.get_for_artifact(a.id)) if (l.action == 'report_issue' or l.action_category == 'report')])
-            }
-            for a in filtered
-        ]
+        "artifacts": artifacts_list
     }
 
 
@@ -295,22 +301,28 @@ async def get_pending_uploads(
     artifacts, total = await artifact_service.get_all_pending(limit=limit, offset=offset)
     audit_service = AuditService(db)
     
+    artifacts_list = []
+    for a in artifacts:
+        logs = await audit_service.get_for_artifact(a.id)
+        deleted_targets = {str(l.target_id) for l in logs if l.action == 'report_deleted'}
+        resolved_targets = {str(l.target_id) for l in logs if l.action == 'report_resolved'}
+        # Count only ACTIVE reports (not withdrawn, not resolved)
+        report_count = sum(1 for l in logs if l.action == 'report_issue' and str(l.id) not in deleted_targets and str(l.id) not in resolved_targets)
+        artifacts_list.append({
+            "artifact_uuid": str(a.artifact_uuid),
+            "filename": a.original_filename,
+            "register_number": a.parsed_reg_no,
+            "subject_code": a.parsed_subject_code,
+            "status": a.workflow_status.value,
+            "uploaded_at": a.uploaded_at.isoformat() if a.uploaded_at else None,
+            "report_count": report_count
+        })
+
     return {
         "total": total,
         "limit": limit,
         "offset": offset,
-        "artifacts": [
-            {
-                "artifact_uuid": str(a.artifact_uuid),
-                "filename": a.original_filename,
-                "register_number": a.parsed_reg_no,
-                "subject_code": a.parsed_subject_code,
-                "status": a.workflow_status.value,
-                "uploaded_at": a.uploaded_at.isoformat() if a.uploaded_at else None,
-                "report_count": len([l for l in (await audit_service.get_for_artifact(a.id)) if (l.action == 'report_issue' or l.action_category == 'report')])
-            }
-            for a in artifacts
-        ]
+        "artifacts": artifacts_list
     }
 
 

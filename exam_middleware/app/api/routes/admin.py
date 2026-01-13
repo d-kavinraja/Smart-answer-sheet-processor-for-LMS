@@ -259,7 +259,12 @@ async def get_audit_logs(
             "actor_type": log.actor_type,
             "actor_id": log.actor_id,
             "actor_username": log.actor_username,
+            "actor_ip": log.actor_ip,
+            "artifact_id": log.artifact_id,
+            "target_type": log.target_type,
+            "target_id": log.target_id,
             "request_data": log.request_data,
+            "response_data": log.response_data,
             "created_at": log.created_at,
         }
         for log in logs
@@ -638,6 +643,14 @@ async def resolve_report(
     report_log = result.scalar_one_or_none()
     if not report_log or report_log.action != 'report_issue':
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report entry not found")
+
+    # Prevent resolving a report that the student has withdrawn
+    deleted_q = await db.execute(
+        select(AuditLog).where(AuditLog.action == 'report_deleted', AuditLog.target_id == str(report_id))
+    )
+    deleted_entry = deleted_q.scalars().first()
+    if deleted_entry:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot resolve a withdrawn report")
 
     note = None
     if isinstance(payload, dict):

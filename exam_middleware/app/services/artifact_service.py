@@ -716,12 +716,38 @@ class AuditService:
     
     async def get_for_artifact(self, artifact_id: int) -> List[AuditLog]:
         """Get all audit logs for an artifact"""
-        result = await self.db.execute(
+        # Primary logs tied to the artifact
+        res_primary = await self.db.execute(
             select(AuditLog)
             .where(AuditLog.artifact_id == artifact_id)
             .order_by(AuditLog.created_at.desc())
         )
-        return list(result.scalars().all())
+        primary_logs = list(res_primary.scalars().all())
+
+        # Also include any 'report_deleted' logs that target report_issue audit ids
+        # belonging to this artifact. Some older deletions may not have artifact_id
+        # set, so we fetch them by matching target_id to the report_issue ids.
+        issue_ids_q = await self.db.execute(
+            select(AuditLog.id).where(AuditLog.action == 'report_issue', AuditLog.artifact_id == artifact_id)
+        )
+        issue_ids = [str(r[0]) for r in issue_ids_q.all()]
+
+        deleted_logs = []
+        if issue_ids:
+            res_deleted = await self.db.execute(
+                select(AuditLog).where(AuditLog.action == 'report_deleted', AuditLog.target_id.in_(issue_ids)).order_by(AuditLog.created_at.desc())
+            )
+            deleted_logs = list(res_deleted.scalars().all())
+
+        # Merge and deduplicate (favor primary logs' ordering)
+        combined = {str(l.id): l for l in primary_logs}
+        for dl in deleted_logs:
+            combined_key = str(dl.id)
+            if combined_key not in combined:
+                combined[combined_key] = dl
+
+        # Return logs sorted by created_at desc
+        return sorted(list(combined.values()), key=lambda x: x.created_at or 0, reverse=True)
     
     async def get_recent(self, limit: int = 100) -> List[AuditLog]:
         """Get recent audit logs"""

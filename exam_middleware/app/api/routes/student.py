@@ -460,6 +460,14 @@ async def get_my_reports(
 
     for r in reports:
         artifact = await artifact_service.get_by_id(r.artifact_id) if r.artifact_id else None
+        # Skip reports that have been deleted (student withdrew) - check audit logs
+        deleted_q = await db.execute(
+            select(AuditLog).where(AuditLog.action == 'report_deleted', AuditLog.target_id == str(r.id)).order_by(AuditLog.created_at.desc())
+        )
+        deleted_entry = deleted_q.scalars().first()
+        if deleted_entry:
+            # skip this report (it was deleted/withdrawn)
+            continue
 
         resolved_q = await db.execute(
             select(AuditLog).where(AuditLog.action == 'report_resolved', AuditLog.target_id == str(r.id)).order_by(AuditLog.created_at.desc())
@@ -485,6 +493,56 @@ async def get_my_reports(
         })
 
     return out
+
+
+@router.delete("/reports/{report_id}")
+async def delete_my_report(
+    report_id: int,
+    session: StudentSession = Depends(get_student_session),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Allow a student to delete (withdraw) a previously submitted report.
+    This creates an audit entry `report_deleted` and leaves original report for traceability.
+    """
+    if not session:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session required")
+
+    from app.db.models import AuditLog
+
+    # Verify the report exists and belongs to this student
+    q = await db.execute(
+        select(AuditLog).where(
+            AuditLog.id == int(report_id),
+            AuditLog.actor_type == 'student',
+            AuditLog.actor_id == str(session.moodle_user_id),
+            AuditLog.action == 'report_issue'
+        )
+    )
+    rpt = q.scalar_one_or_none()
+    if not rpt:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found or not owned by you")
+
+    # Use AuditService to create a proper audit entry (ensures action_category is set)
+    audit_service = AuditService(db)
+    try:
+        await audit_service.log_action(
+            action='report_deleted',
+            action_category='report',
+            actor_type='student',
+            actor_id=str(session.moodle_user_id),
+            actor_username=session.moodle_username,
+            artifact_id=rpt.artifact_id,
+            target_type='audit_log',
+            target_id=str(report_id),
+            description='Student withdrew their report'
+        )
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete report: {e}")
+
+    return {"success": True, "message": "Report deleted"}
 
 
 @router.post("/submit/{artifact_uuid}", response_model=SubmissionResponse)

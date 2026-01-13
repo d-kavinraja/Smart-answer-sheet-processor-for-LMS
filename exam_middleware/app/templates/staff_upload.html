@@ -862,7 +862,7 @@
                 
                 // Verify token is still valid before showing upload section
                 try {
-                    const response = await fetch('/api/upload/all', {
+                    const response = await fetch('/upload/all', {
                         headers: {
                             'Authorization': `Bearer ${authToken}`
                         }
@@ -964,13 +964,9 @@
                 '/upload/all',
                 '/upload/list',
                 '/upload/',
-                '/api/upload/all',
-                '/api/upload/list',
-                '/api/uploads',
-                '/api/artifacts',
+                '/upload',
                 '/artifacts',
-                '/files',
-                '/api/files'
+                '/files'
             ];
             
             let response = null;
@@ -1506,6 +1502,21 @@
                 }
 
                 const logs = await res.json();
+                
+                // DEBUG: Log all audit entries to console
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('🔍 AUDIT LOGS for artifact ID:', id);
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('📊 Total logs received:', logs.length);
+                console.table(logs.map(l => ({
+                    id: l.id,
+                    action: l.action,
+                    actor: l.actor_username || l.actor_id,
+                    target_id: l.target_id,
+                    artifact_id: l.artifact_id,
+                    created: new Date(l.created_at).toLocaleString()
+                })));
+                
                 // Build a map of resolved report entries keyed by the original report id
                 const resolvedMap = {};
                 (logs || []).forEach(l => {
@@ -1516,39 +1527,118 @@
                     }
                 });
 
-                const reports = (logs || []).filter(l => (l.action === 'report_issue' || l.action_category === 'report'));
+                // Build maps for deleted reports and all report_issue entries.
+                const deletedMap = {};
+                // Accept any report_deleted entry as indicating the target report was withdrawn.
+                // Some older entries may have target_type unset, so don't require it here.
+                const deletedLogs = (logs || []).filter(l => l.action === 'report_deleted');
+                console.log('🗑️  report_deleted entries found:', deletedLogs.length);
+                if (deletedLogs.length > 0) {
+                    console.table(deletedLogs.map(l => ({
+                        id: l.id,
+                        target_id: l.target_id,
+                        artifact_id: l.artifact_id,
+                        actor: l.actor_username || l.actor_id
+                    })));
+                }
+                
+                deletedLogs.forEach(l => {
+                    if (l && (l.target_id || (l.request_data && l.request_data.target_id))) {
+                        const tid = l.target_id || (l.request_data && l.request_data.target_id);
+                        console.log(`✅ Marking report ${tid} as WITHDRAWN`);
+                        deletedMap[String(tid)] = l;
+                    }
+                });
 
-                if (!reports.length) {
+                const allReports = (logs || []).filter(l => l.action === 'report_issue');
+                console.log('📝 report_issue entries found:', allReports.length);
+                if (allReports.length > 0) {
+                    console.table(allReports.map(r => ({
+                        id: r.id,
+                        status: deletedMap[String(r.id)] ? '⚪ WITHDRAWN' : (resolvedMap[String(r.id)] ? '🟢 RESOLVED' : '🟦 ACTIVE'),
+                        actor: r.actor_username || r.actor_id,
+                        created: new Date(r.created_at).toLocaleString()
+                    })));
+                }
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+                // Badge count: only active (not withdrawn) reports
+                const activeReports = allReports.filter(r => !deletedMap[String(r.id)]);
+
+                if (!allReports.length) {
                     bodyEl.innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-chat-left-dots fs-1"></i><p class="mt-2">No reports for this artifact</p></div>';
                     return;
                 }
 
                 let html = '<div class="list-group">';
-                reports.forEach(r => {
+                // Render each original report_issue entry. If it was withdrawn, render a withdrawn placeholder
+                allReports.forEach(r => {
+                    const deletion = deletedMap[String(r.id)];
                     const req = r.request_data || {};
                     let suggestionsHtml = '';
                     if (req.suggested_reg_no) suggestionsHtml += `<div><strong>Suggested Reg:</strong> ${req.suggested_reg_no}</div>`;
                     if (req.suggested_subject_code) suggestionsHtml += `<div><strong>Suggested Subject:</strong> ${req.suggested_subject_code}</div>`;
+                    if (req.page_number) suggestionsHtml += `<div><strong>Page:</strong> ${req.page_number}</div>`;
+                    if (req.notes) suggestionsHtml += `<div><strong>Notes:</strong> ${req.notes}</div>`;
 
                     // Determine if this report has already been resolved by checking for a corresponding
                     // 'report_resolved' audit entry (targeting this report id)
                     const resolvedEntry = (resolvedMap && (resolvedMap[String(r.id)] || resolvedMap[r.id]));
 
-                    html += `<div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <strong>${r.actor_username || r.actor_id || 'Student'}</strong>
-                                <div class="small text-muted">${new Date(r.created_at).toLocaleString()}</div>
+                    const suggestionPanel = suggestionsHtml ? `<div class="mt-2 p-3 border rounded bg-light small">${suggestionsHtml}</div>` : '';
+
+                    // Helper to escape HTML to avoid XSS when inserting user text
+                    const escapeHtml = (str) => {
+                        if (str === null || str === undefined) return '';
+                        return String(str)
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;')
+                            .replace(/'/g, '&#39;');
+                    };
+
+                    if (deletion) {
+                        // Render withdrawn placeholder. Disable action buttons for withdrawn reports.
+                        html += `<div class="list-group-item text-muted">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>${r.actor_username || r.actor_id || 'Student'}</strong>
+                                    <span class="badge bg-secondary ms-2">Withdrawn</span>
+                                    <div class="small text-muted">${new Date(deletion.created_at).toLocaleString()}</div>
+                                    ${deletion.actor_username || deletion.actor_id ? `<div class="small text-muted">Withdrawn by ${deletion.actor_username || deletion.actor_id}</div>` : ''}
+                                    ${r.actor_email ? `<div class="small text-muted">${r.actor_email}</div>` : ''}
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary me-2" disabled>Edit Artifact</button>
+                                    <button class="btn btn-sm btn-outline-success me-2" disabled>Resolve</button>
+                                </div>
                             </div>
-                            <div>
-                                <button class="btn btn-sm btn-outline-primary me-2" onclick="openEditForm('${artifactUuid}','${id}')">Edit Artifact</button>
-                                ${resolvedEntry ? `<span class="badge bg-success">Resolved</span>` : `<button class="btn btn-sm btn-outline-success me-2" onclick="resolveReport('${artifactUuid}','${id}',${r.id})">Resolve</button>`}
+                            <div class="mt-2">${escapeHtml('Student withdrew their report')}</div>
+                        </div>`;
+                    } else {
+                        // Normal active report entry
+                        const applyBtn = (req.suggested_reg_no || req.suggested_subject_code) ? `<button class="btn btn-sm btn-outline-secondary me-2" onclick="applySuggestion('${artifactUuid}','${id}','${(req.suggested_reg_no||'')}', '${(req.suggested_subject_code||'')}')">Apply Suggestion</button>` : '';
+
+                        html += `<div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>${r.actor_username || r.actor_id || 'Student'}</strong>
+                                    <span class="badge bg-primary ms-2">Active</span>
+                                    <div class="small text-muted">${new Date(r.created_at).toLocaleString()}</div>
+                                    ${r.actor_email ? `<div class="small text-muted">${r.actor_email}</div>` : ''}
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary me-2" onclick="openEditForm('${artifactUuid}','${id}')">Edit Artifact</button>
+                                    ${applyBtn}
+                                    ${resolvedEntry ? `<span class="badge bg-success">Resolved</span>` : `<button class="btn btn-sm btn-outline-success me-2" onclick="resolveReport('${artifactUuid}','${id}',${r.id})">Resolve</button>`}
+                                </div>
                             </div>
-                        </div>
-                        <div class="mt-2">${r.description || ''}</div>
-                        ${suggestionsHtml ? `<div class="mt-2 text-muted small">${suggestionsHtml}</div>` : ''}
-                        ${resolvedEntry ? `<div class="mt-2 small text-muted">Resolved by ${resolvedEntry.actor_username || resolvedEntry.actor_id} on ${new Date(resolvedEntry.created_at).toLocaleString()}</div>` : ''}
-                    </div>`;
+                            <div class="mt-2">${escapeHtml(r.description || '')}</div>
+                            ${suggestionPanel}
+                            ${resolvedEntry ? `<div class="mt-2 small text-muted">Resolved by ${resolvedEntry.actor_username || resolvedEntry.actor_id} on ${new Date(resolvedEntry.created_at).toLocaleString()}</div>` : ''}
+                        </div>`;
+                    }
                 });
                 html += '</div>';
 
@@ -1644,6 +1734,47 @@
             } catch (err) {
                 console.error(err);
                 showToast('Error updating artifact', 'danger');
+            }
+        }
+
+        // Apply suggestion from a report directly to the artifact metadata
+        async function applySuggestion(artifactUuid, artifactId, suggestedReg, suggestedSub) {
+            if (!suggestedReg && !suggestedSub) {
+                showToast('No suggestion provided', 'warning');
+                return;
+            }
+
+            const confirmMsg = `Apply suggested values?\n${suggestedReg ? 'Reg: ' + suggestedReg + '\n' : ''}${suggestedSub ? 'Subject: ' + suggestedSub : ''}`;
+            if (!(await showConfirm(confirmMsg, 'Apply Suggestion'))) return;
+
+            try {
+                const payload = {
+                    parsed_reg_no: suggestedReg || null,
+                    parsed_subject_code: suggestedSub || null,
+                    original_filename: null
+                };
+
+                const res = await fetch(`/admin/artifacts/${encodeURIComponent(artifactUuid)}/edit`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message || 'Suggestion applied', 'success');
+                    // Refresh reports and listing
+                    viewReports(artifactUuid, artifactId);
+                    loadPendingFiles();
+                } else {
+                    showToast(data.detail || data.message || 'Failed to apply suggestion', 'danger');
+                }
+            } catch (err) {
+                console.error('Error applying suggestion', err);
+                showToast('Error applying suggestion', 'danger');
             }
         }
 

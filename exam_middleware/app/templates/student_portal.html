@@ -1619,6 +1619,7 @@
                             </div>
                             <div class="text-end">
                                 ${r.resolved ? `<span class="badge bg-success">Resolved</span>` : `<span class="badge bg-warning text-dark">Pending</span>`}
+                                <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteStudentReport(${r.id})">Delete</button>
                             </div>
                         </div>
                         <div class="mt-2">${r.description || ''}</div>
@@ -1630,6 +1631,28 @@
             } catch (err) {
                 console.error('Error loading student reports', err);
                 bodyEl.innerHTML = '<div class="alert alert-danger">Error loading reports</div>';
+            }
+        }
+
+        // Allow student to delete their own report (withdraw)
+        async function deleteStudentReport(reportId) {
+            if (!reportId) return;
+            try {
+                const res = await fetch(`/student/reports/${encodeURIComponent(reportId)}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Session-ID': sessionToken }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    // Refresh modal and notification badge (no success toast to avoid duplicate messages)
+                    await loadReportNotifications();
+                    await openMyReportsModal();
+                } else {
+                    showToast(data.detail || data.message || 'Failed to delete report', 'danger');
+                }
+            } catch (err) {
+                console.error('Error deleting report', err);
+                showToast('Error deleting report', 'danger');
             }
         }
 
