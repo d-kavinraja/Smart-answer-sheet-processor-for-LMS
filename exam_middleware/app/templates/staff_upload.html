@@ -1352,39 +1352,64 @@
         
         async function uploadFiles() {
             if (validatedFiles.length === 0) return;
-            
+
             const progressContainer = document.getElementById('progressContainer');
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
             const resultsCard = document.getElementById('resultsCard');
             const uploadResults = document.getElementById('uploadResults');
             const loadingOverlay = document.getElementById('loadingOverlay');
-            
-            progressContainer.classList.add('active');
-            uploadBtn.disabled = true;
-            loadingOverlay.classList.add('active');
-            
-            const formData = new FormData();
-            validatedFiles.forEach(f => {
-                formData.append('files', f.file);
-            });
-            formData.append('exam_session', new Date().toISOString().split('T')[0].replace(/-/g, ''));
-            
+
+            // Enter busy state
             try {
-                const response = await fetch('/upload/bulk', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
+                progressContainer.classList.add('active');
+                uploadBtn.disabled = true;
+                loadingOverlay.classList.add('active');
+
+                const formData = new FormData();
+                validatedFiles.forEach(f => formData.append('files', f.file));
+                formData.append('exam_session', new Date().toISOString().split('T')[0].replace(/-/g, ''));
+
+                let response;
+                try {
+                    response = await fetch('/upload/bulk', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: formData
+                    });
+                } catch (networkErr) {
+                    // Network error - show message and rethrow to outer catch
+                    uploadResults.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Connection error: ${networkErr.message}
+                        </div>
+                    `;
+                    resultsCard.style.display = 'block';
+                    throw networkErr;
+                }
+
+                let data = null;
+                try {
+                    data = await response.json();
+                } catch (parseErr) {
+                    uploadResults.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Unexpected response from server.
+                        </div>
+                    `;
+                    resultsCard.style.display = 'block';
+                    throw parseErr;
+                }
+
+                // Update progress UI
                 progressBar.style.width = '100%';
                 progressText.textContent = '100%';
-                
-                // Handle token expiration
+
+                // Handle token expiration explicitly
                 if (response.status === 401) {
                     uploadResults.innerHTML = `
                         <div class="alert alert-warning">
@@ -1393,25 +1418,25 @@
                         </div>
                     `;
                     resultsCard.style.display = 'block';
-                    setTimeout(() => logout(), 2000);
+                    // ensure cleanup happens then logout
+                    setTimeout(() => logout(), 1200);
                     return;
                 }
-                
+
                 if (response.ok) {
                     document.getElementById('uploadedFiles').textContent = data.successful || 0;
-                    
+
                     let resultsHtml = `
                         <div class="alert alert-success">
                             <i class="bi bi-check-circle-fill me-2"></i>
                             Successfully uploaded <strong>${data.successful}</strong> of <strong>${data.total_files}</strong> files
                         </div>
                     `;
-                    
+
                     if (data.results && data.results.length > 0) {
                         resultsHtml += '<div class="list-group">';
                         data.results.forEach(r => {
                             const icon = r.success ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
-                            // Prefer a single error string: check r.error, r.errors (array), or r.message
                             const singleError = r.error || (r.errors && r.errors.length ? r.errors[0] : null) || r.message || 'Unknown error';
                             resultsHtml += `
                                 <div class="list-group-item d-flex align-items-center">
@@ -1423,7 +1448,7 @@
                         });
                         resultsHtml += '</div>';
                     }
-                    
+
                     uploadResults.innerHTML = resultsHtml;
                     // Reload pending files after successful upload
                     loadPendingFiles();
@@ -1434,23 +1459,44 @@
                             Upload failed: ${data.detail || 'Unknown error'}
                         </div>
                     `;
+                    resultsCard.style.display = 'block';
                 }
-                
-                resultsCard.style.display = 'block';
             } catch (error) {
-                uploadResults.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        Connection error: ${error.message}
-                    </div>
-                `;
-                resultsCard.style.display = 'block';
+                // Ensure an error message is visible (if not already set)
+                try {
+                    const uploadResults = document.getElementById('uploadResults');
+                    if (!uploadResults.innerHTML || uploadResults.innerHTML.trim() === '') {
+                        uploadResults.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                Error: ${error.message || 'An error occurred'}
+                            </div>
+                        `;
+                        resultsCard.style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error('Error rendering upload error UI:', e);
+                }
+                console.error('uploadFiles error:', error);
             } finally {
-                setTimeout(() => {
+                // Always restore UI state immediately to avoid leaving controls disabled
+                try {
+                    progressBar.style.width = '0%';
+                    progressText.textContent = '0%';
+                } catch (e) {
+                    // ignore if elements missing
+                }
+                try {
                     progressContainer.classList.remove('active');
-                    uploadBtn.disabled = false;
                     loadingOverlay.classList.remove('active');
-                }, 1000);
+                } catch (e) {}
+                try {
+                    // Recompute stats and enable button only if there are still valid files
+                    updateStats();
+                } catch (e) {
+                    // fallback: enable button
+                    uploadBtn.disabled = false;
+                }
             }
         }
     </script>
