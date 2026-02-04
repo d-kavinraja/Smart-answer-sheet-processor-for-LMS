@@ -7,10 +7,13 @@
     <title>Student Portal - Examination Middleware</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap"
         rel="stylesheet">
     <style>
         :root {
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-display: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
             --primary: #10b981;
             --primary-dark: #059669;
             --primary-light: #34d399;
@@ -50,12 +53,28 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--gray-50);
+            font-family: var(--font-body);
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
             color: var(--gray-900);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+            position: relative;
+            font-size: 0.98rem;
+            letter-spacing: 0.005em;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(1200px 420px at 10% -10%, rgba(16, 185, 129, 0.12), transparent 55%),
+                radial-gradient(900px 360px at 90% -20%, rgba(139, 92, 246, 0.12), transparent 55%),
+                radial-gradient(700px 260px at 50% 110%, rgba(59, 130, 246, 0.08), transparent 55%);
+            z-index: 0;
+            pointer-events: none;
         }
 
         /* Typography */
@@ -65,8 +84,9 @@
         h4,
         h5,
         h6 {
+            font-family: var(--font-display);
             font-weight: 700;
-            letter-spacing: -0.025em;
+            letter-spacing: -0.02em;
             color: var(--gray-900);
         }
 
@@ -84,11 +104,11 @@
 
         /* Navbar */
         .navbar {
-            background: white !important;
-            border-bottom: 1px solid var(--gray-200);
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
             box-shadow: var(--shadow-sm);
             padding: 0.875rem 0;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -109,8 +129,10 @@
         /* Main Container */
         .main-container {
             max-width: 1280px;
-            padding: 2rem 1rem;
+            padding: 2.5rem 1rem 2rem;
             animation: fadeIn 0.4s ease-out;
+            position: relative;
+            z-index: 1;
         }
 
         @keyframes fadeIn {
@@ -127,12 +149,13 @@
 
         /* Cards */
         .card {
-            background: white;
-            border: 1px solid var(--gray-200);
-            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 16px;
             box-shadow: var(--shadow-sm);
             transition: var(--transition);
             overflow: hidden;
+            backdrop-filter: blur(6px);
         }
 
         .card:hover {
@@ -140,14 +163,14 @@
         }
 
         .card-header {
-            background: white;
-            border-bottom: 1px solid var(--gray-200);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
             padding: 1.25rem 1.5rem;
             font-weight: 600;
         }
 
         .card-header.bg-primary {
-            background: var(--primary) !important;
+            background: linear-gradient(135deg, var(--primary), var(--purple)) !important;
             border: none;
             color: white !important;
         }
@@ -173,13 +196,39 @@
 
         /* Welcome Banner */
         .welcome-banner {
-            background: white;
-            border: 1px solid var(--gray-200);
-            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 16px;
             padding: 2rem;
             margin-bottom: 2rem;
             box-shadow: var(--shadow-sm);
             animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, rgba(16, 185, 129, 0.08), rgba(139, 92, 246, 0.06));
+            opacity: 0.8;
+        }
+
+        .welcome-banner > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .welcome-banner::after {
+            content: "";
+            position: absolute;
+            right: -40px;
+            top: -40px;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.18), transparent 70%);
+            opacity: 0.8;
         }
 
         .welcome-banner h2 {
@@ -282,11 +331,18 @@
 
         .paper-preview {
             height: 180px;
-            background: var(--gray-100);
+            background: linear-gradient(135deg, #f8fafc, #eef2f7);
             display: flex;
             align-items: center;
             justify-content: center;
             border-bottom: 1px solid var(--gray-200);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
         }
 
         .paper-preview img {
@@ -330,11 +386,12 @@
         /* Buttons */
         .btn {
             font-weight: 600;
-            border-radius: 8px;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
+            border-radius: 10px;
+            padding: 0.7rem 1.4rem;
+            font-size: 0.9rem;
             transition: var(--transition);
             border: none;
+            letter-spacing: 0.01em;
         }
 
         .btn-submit {
@@ -392,12 +449,42 @@
             color: white;
         }
 
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .section-header h4 {
+            margin: 0;
+            font-size: 1.35rem;
+        }
+
+        .section-header p {
+            margin: 0;
+            color: var(--gray-600);
+            font-size: 0.95rem;
+        }
+
+        .empty-state {
+            padding: 3rem 1.5rem;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--gray-400);
+            margin-bottom: 1rem;
+        }
+
         /* Forms */
         .form-control {
-            border-radius: 8px;
-            padding: 0.625rem 0.875rem;
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
             border: 1px solid var(--gray-300);
-            font-size: 0.9375rem;
+            font-size: 0.95rem;
             transition: var(--transition);
         }
 
@@ -955,6 +1042,13 @@
                 </div>
             </div>
 
+            <div class="section-header">
+                <div>
+                    <h4>Your Answer Sheets</h4>
+                    <p>Review, preview, and submit your papers to Moodle.</p>
+                </div>
+            </div>
+
             <div class="row g-4" id="papersGrid"></div>
 
             <div class="card" id="emptyState" style="display: none;">
@@ -1081,16 +1175,24 @@
                         <label class="form-label">Describe the problem</label>
                         <textarea id="reportMessage" class="form-control" rows="4"
                             placeholder="Explain what's wrong (wrong register number, subject code, damaged file etc.)"></textarea>
+                        <small id="reportMessageError" class="text-danger d-none"></small>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Suggested Register No</label>
-                            <input id="reportSuggestedReg" class="form-control" maxlength="12"
+                            <input id="reportSuggestedReg" class="form-control" maxlength="12" inputmode="numeric"
+                                pattern="\d{12}" title="Enter exactly 12 digits"
+                                oninput="this.value=this.value.replace(/\D/g,'').slice(0,12)"
                                 placeholder="12-digit reg (optional)">
+                            <small id="reportSuggestedRegError" class="text-danger d-none"></small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Suggested Subject Code</label>
-                            <input id="reportSuggestedSub" class="form-control" placeholder="e.g. 19AI405">
+                            <input id="reportSuggestedSub" class="form-control" maxlength="7"
+                                pattern="[A-Z0-9]{7}" title="7 characters, uppercase letters and numbers only"
+                                oninput="this.value=this.value.toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9]/g,'').slice(0,7)"
+                                placeholder="e.g. 19AI405">
+                            <small id="reportSuggestedSubError" class="text-danger d-none"></small>
                         </div>
                     </div>
                 </div>
@@ -1513,19 +1615,58 @@
             document.getElementById('reportMessage').value = '';
             document.getElementById('reportSuggestedReg').value = '';
             document.getElementById('reportSuggestedSub').value = '';
+            showReportFieldError('reportMessage', 'reportMessageError', '');
+            showReportFieldError('reportSuggestedReg', 'reportSuggestedRegError', '');
+            showReportFieldError('reportSuggestedSub', 'reportSuggestedSubError', '');
             const modal = new bootstrap.Modal(document.getElementById('reportModal'));
             modal.show();
         }
 
+        function showReportFieldError(inputId, errorId, message) {
+            const input = document.getElementById(inputId);
+            const el = document.getElementById(errorId);
+            if (!el || !input) return;
+            if (message) {
+                el.textContent = message;
+                el.classList.remove('d-none');
+                input.classList.add('is-invalid');
+            } else {
+                el.textContent = '';
+                el.classList.add('d-none');
+                input.classList.remove('is-invalid');
+            }
+        }
+
         async function submitReport() {
             const msg = document.getElementById('reportMessage').value.trim();
-            const suggestedReg = document.getElementById('reportSuggestedReg').value.trim();
-            const suggestedSub = document.getElementById('reportSuggestedSub').value.trim();
+            const suggestedRegRaw = document.getElementById('reportSuggestedReg').value.trim();
+            const suggestedSubRaw = document.getElementById('reportSuggestedSub').value.trim();
+            const suggestedReg = suggestedRegRaw;
+            const suggestedSub = suggestedSubRaw.replace(/\s+/g, '').toUpperCase();
+            document.getElementById('reportSuggestedSub').value = suggestedSub;
 
             if (!msg) {
-                alert('Please enter a description of the problem.');
+                showReportFieldError('reportMessage', 'reportMessageError', 'Please enter a description of the problem.');
                 return;
             }
+
+            showReportFieldError('reportMessage', 'reportMessageError', '');
+
+            showReportFieldError('reportSuggestedReg', 'reportSuggestedRegError', '');
+            showReportFieldError('reportSuggestedSub', 'reportSuggestedSubError', '');
+
+            if (suggestedReg && !/^\d{12}$/.test(suggestedReg)) {
+                showReportFieldError('reportSuggestedReg', 'reportSuggestedRegError', 'Register number must be exactly 12 digits.');
+                return;
+            }
+
+            if (suggestedSub && !/^[A-Z0-9]{7}$/.test(suggestedSub)) {
+                showReportFieldError('reportSuggestedSub', 'reportSuggestedSubError', 'Subject code must be 7 characters (A-Z and 0-9 only).');
+                return;
+            }
+
+            showReportFieldError('reportSuggestedReg', 'reportSuggestedRegError', '');
+            showReportFieldError('reportSuggestedSub', 'reportSuggestedSubError', '');
 
             const submitBtn = document.getElementById('reportSubmitBtn');
             submitBtn.disabled = true;
@@ -1575,6 +1716,36 @@
                 submitBtn.textContent = 'Submit Report';
             }
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const msgInput = document.getElementById('reportMessage');
+            const regInput = document.getElementById('reportSuggestedReg');
+            const subInput = document.getElementById('reportSuggestedSub');
+
+            if (msgInput) {
+                msgInput.addEventListener('input', () => {
+                    if (msgInput.value.trim()) {
+                        showReportFieldError('reportMessage', 'reportMessageError', '');
+                    }
+                });
+            }
+
+            if (regInput) {
+                regInput.addEventListener('input', () => {
+                    if (!regInput.value || /^\d{12}$/.test(regInput.value)) {
+                        showReportFieldError('reportSuggestedReg', 'reportSuggestedRegError', '');
+                    }
+                });
+            }
+
+            if (subInput) {
+                subInput.addEventListener('input', () => {
+                    if (!subInput.value || /^[A-Z0-9]{1,7}$/.test(subInput.value)) {
+                        showReportFieldError('reportSuggestedSub', 'reportSuggestedSubError', '');
+                    }
+                });
+            }
+        });
 
         function initSubmission(paperId, subjectCode, filename) {
             currentPaperId = paperId;
@@ -1646,13 +1817,40 @@
             resultModal.show();
         }
 
+        let loadingTimer = null;
+        let loadingFailSafeBound = false;
+
         function showLoading() {
             loadingOverlay.classList.add('active');
+            if (loadingTimer) clearTimeout(loadingTimer);
+            loadingTimer = setTimeout(() => {
+                loadingOverlay.classList.remove('active');
+            }, 15000);
+
+            if (!loadingFailSafeBound) {
+                loadingFailSafeBound = true;
+                loadingOverlay.addEventListener('click', hideLoading);
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') hideLoading();
+                });
+            }
         }
 
         function hideLoading() {
+            if (loadingTimer) {
+                clearTimeout(loadingTimer);
+                loadingTimer = null;
+            }
             loadingOverlay.classList.remove('active');
         }
+
+        window.addEventListener('error', () => {
+            hideLoading();
+        });
+
+        window.addEventListener('unhandledrejection', () => {
+            hideLoading();
+        });
 
         // Toast helper for non-blocking notifications
         function showToast(title, htmlContent, variant = 'info') {

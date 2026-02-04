@@ -12,6 +12,9 @@
         rel="stylesheet">
     <style>
         :root {
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-display: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
             --primary-color: #2563eb;
             --secondary-color: #1d4ed8;
             --accent-color: #3b82f6;
@@ -27,29 +30,72 @@
             box-sizing: border-box;
         }
 
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes softPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.22);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(37, 99, 235, 0.08);
+            }
+        }
+
         body {
-            background: var(--bg-color);
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
             min-height: 100vh;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: var(--font-body);
             color: var(--text-primary);
+            position: relative;
+            font-size: 0.98rem;
+            letter-spacing: 0.005em;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(1200px 420px at 10% -10%, rgba(59, 130, 246, 0.14), transparent 55%),
+                radial-gradient(900px 360px at 90% -20%, rgba(14, 165, 233, 0.12), transparent 55%),
+                radial-gradient(700px 260px at 50% 110%, rgba(99, 102, 241, 0.10), transparent 55%);
+            z-index: 0;
+            pointer-events: none;
         }
 
         .main-container {
             max-width: 1280px;
-            padding: 2rem 1.5rem;
+            padding: 2.5rem 1.5rem 2rem;
+            position: relative;
+            z-index: 1;
         }
 
         /* Cards */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 14px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            animation: fadeUp 280ms ease-out both;
         }
 
         .card:hover {
             border-color: var(--primary-color);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+            transform: translateY(-2px);
         }
 
         .login-card {
@@ -58,7 +104,7 @@
         }
 
         .card-header {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color), #4f46e5);
             color: white;
             border-radius: 12px 12px 0 0 !important;
             padding: 2rem;
@@ -74,33 +120,57 @@
 
         /* Navbar */
         .navbar {
-            background: var(--card-bg) !important;
+            background: rgba(255, 255, 255, 0.92) !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.85);
             padding: 1rem 0;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .navbar-brand {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-display);
             font-weight: 600;
             font-size: 1.3rem;
             color: var(--primary-color) !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .navbar-brand .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+            font-size: 1.1rem;
         }
 
         /* Stats cards */
         .stats-card {
             background: var(--card-bg);
             border: 2px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 2rem 1.5rem;
             text-align: center;
             color: white;
             margin-bottom: 1.5rem;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+            animation: fadeUp 300ms ease-out both;
         }
 
         .stats-card:hover {
             border-color: currentColor;
+            transform: translateY(-2px);
+            box-shadow: 0 14px 26px rgba(15, 23, 42, 0.12);
         }
 
         .stats-card.total {
@@ -126,7 +196,7 @@
         .stats-number {
             font-size: 2.5rem;
             font-weight: 700;
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-display);
             line-height: 1;
             margin-bottom: 0.5rem;
         }
@@ -140,18 +210,33 @@
         /* Upload zone */
         .upload-zone {
             border: 2px dashed var(--border-color);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 3.5rem 2rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc, #eef2ff);
+            animation: fadeUp 320ms ease-out both, softPulse 2.2s ease-in-out 1.2s infinite;
         }
 
         .upload-zone:hover,
         .upload-zone.dragover {
             border-color: var(--primary-color);
-            background: #eff6ff;
+            background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary,
+        .btn-outline-secondary,
+        .btn-outline-primary {
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.2s ease;
+        }
+
+        .btn-primary:hover,
+        .btn-outline-secondary:hover,
+        .btn-outline-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
         }
 
         .upload-zone i {
@@ -212,10 +297,10 @@
         .btn-primary {
             background: var(--primary-color);
             border: none;
-            padding: 0.875rem 2rem;
-            border-radius: 8px;
+            padding: 0.9rem 2rem;
+            border-radius: 10px;
             font-weight: 600;
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-body);
             transition: all 0.2s ease;
         }
 
@@ -233,8 +318,8 @@
             border: 2px solid var(--border-color);
             color: var(--text-secondary);
             font-weight: 600;
-            border-radius: 8px;
-            padding: 0.875rem 2rem;
+            border-radius: 10px;
+            padding: 0.9rem 2rem;
             transition: all 0.2s ease;
         }
 
@@ -256,14 +341,41 @@
             border-color: #dc2626;
         }
 
+        .btn-reports {
+            border: 2px solid #f59e0b;
+            color: #b45309;
+            background: #fff7ed;
+        }
+
+        .btn-reports:hover {
+            background: #f59e0b;
+            color: #fff;
+            border-color: #f59e0b;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.5rem;
+            height: 1.25rem;
+            padding: 0 0.4rem;
+            font-size: 0.75rem;
+            line-height: 1;
+            border-radius: 999px;
+            background: #ef4444;
+            color: #fff;
+            font-weight: 700;
+        }
+
         /* Add for btn-outline-primary (refresh) */
         .btn-outline-primary {
             border: 2px solid var(--accent-color);
             color: var(--accent-color);
             background: #fff;
             font-weight: 600;
-            border-radius: 8px;
-            padding: 0.875rem 2rem;
+            border-radius: 10px;
+            padding: 0.9rem 2rem;
             transition: all 0.2s ease;
         }
 
@@ -275,8 +387,8 @@
 
         /* Form styles */
         .form-control {
-            border-radius: 8px;
-            padding: 0.875rem 1rem;
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
             border: 1px solid var(--border-color);
             font-size: 1rem;
             transition: all 0.2s ease;
@@ -285,6 +397,26 @@
         .form-control:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 1rem 0 1.5rem;
+        }
+
+        .section-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .section-header p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
         }
 
         .input-group-text {
@@ -304,6 +436,16 @@
             font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 0.5rem;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: var(--font-display);
+            letter-spacing: -0.02em;
         }
 
         /* Progress bar */
@@ -591,8 +733,8 @@
     <nav class="navbar navbar-expand-lg navbar-light mb-4">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <img src="https://saveetha.ac.in/wp-content/uploads/2024/03/sec-logo-01as.png" alt="Saveetha Logo"
-                    style="height:80px;" />
+                <span class="brand-icon" aria-hidden="true"><i class="bi bi-shield-lock-fill"></i></span>
+                <span>Staff Portal</span>
             </a>
             <div class="navbar-nav ms-auto align-items-center">
                 <span class="navbar-text me-3" id="userInfo" style="display: none;">
@@ -671,6 +813,13 @@
                         <div class="stats-number" id="uploadedFiles">0</div>
                         <small><i class="bi bi-cloud-check me-1"></i>Total Uploaded</small>
                     </div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <div>
+                    <h5>Upload & Validate Papers</h5>
+                    <p>Ensure filenames follow the required format before submission.</p>
                 </div>
             </div>
 
@@ -1246,8 +1395,8 @@
                             <button class="btn btn-sm btn-outline-primary me-2 btn-details action-btn" data-artifact-uuid="${artifactUuidVal || ''}" data-artifact-id="${artifactIdVal || ''}">
                                 <i class="bi bi-eye"></i> Details
                             </button>
-                            <button class="btn btn-sm btn-outline-danger btn-reports action-btn" data-artifact-uuid="${artifactUuidVal || ''}" data-artifact-id="${artifactIdVal || ''}">
-                                <i class="bi bi-flag-fill"></i> Reports <span class="badge bg-danger ms-2">${a.report_count || 0}</span>
+                            <button class="btn btn-sm btn-reports action-btn" data-artifact-uuid="${artifactUuidVal || ''}" data-artifact-id="${artifactIdVal || ''}">
+                                <i class="bi bi-flag-fill"></i> Reports <span class="report-badge ms-2">${a.report_count || 0}</span>
                             </button>
                             <button class="btn btn-sm btn-outline-danger btn-delete ms-2 action-btn" data-artifact-uuid="${artifactUuidVal || ''}" data-artifact-id="${artifactIdVal || ''}">
                                 <i class="bi bi-trash"></i> Delete
@@ -1400,6 +1549,43 @@
             document.getElementById('resultsCard').style.display = 'none';
         }
 
+        let staffLoadingTimer = null;
+        let staffFailSafeBound = false;
+
+        function showStaffLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) loadingOverlay.classList.add('active');
+            if (staffLoadingTimer) clearTimeout(staffLoadingTimer);
+            staffLoadingTimer = setTimeout(() => {
+                if (loadingOverlay) loadingOverlay.classList.remove('active');
+            }, 15000);
+
+            if (!staffFailSafeBound && loadingOverlay) {
+                staffFailSafeBound = true;
+                loadingOverlay.addEventListener('click', hideStaffLoading);
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') hideStaffLoading();
+                });
+            }
+        }
+
+        function hideStaffLoading() {
+            if (staffLoadingTimer) {
+                clearTimeout(staffLoadingTimer);
+                staffLoadingTimer = null;
+            }
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) loadingOverlay.classList.remove('active');
+        }
+
+        window.addEventListener('error', () => {
+            hideStaffLoading();
+        });
+
+        window.addEventListener('unhandledrejection', () => {
+            hideStaffLoading();
+        });
+
         async function uploadFiles() {
             if (validatedFiles.length === 0) return;
 
@@ -1414,7 +1600,7 @@
             try {
                 progressContainer.classList.add('active');
                 uploadBtn.disabled = true;
-                loadingOverlay.classList.add('active');
+                showStaffLoading();
 
                 const formData = new FormData();
                 validatedFiles.forEach(f => formData.append('files', f.file));
@@ -1538,7 +1724,7 @@
                 }
                 try {
                     progressContainer.classList.remove('active');
-                    loadingOverlay.classList.remove('active');
+                    hideStaffLoading();
                 } catch (e) { }
                 try {
                     // Recompute stats and enable button only if there are still valid files
@@ -1719,7 +1905,11 @@
                         </div>`;
                     } else {
                         // Normal active report entry
-                        const applyBtn = (req.suggested_reg_no || req.suggested_subject_code) ? `<button class="btn btn-sm btn-outline-secondary me-2" onclick="applySuggestion('${artifactUuid}','${id}','${(req.suggested_reg_no || '')}', '${(req.suggested_subject_code || '')}')">Apply Suggestion</button>` : '';
+                        const applyBtn = (req.suggested_reg_no || req.suggested_subject_code)
+                            ? (resolvedEntry
+                                ? `<button class="btn btn-sm btn-outline-secondary me-2" disabled><i class="bi bi-check2-circle me-1"></i>Applied</button>`
+                                : `<button class="btn btn-sm btn-outline-secondary me-2" onclick="applySuggestion(this,'${artifactUuid}','${id}','${(req.suggested_reg_no || '')}', '${(req.suggested_subject_code || '')}')">Apply Suggestion</button>`)
+                            : '';
 
                         html += `<div class="list-group-item">
                             <div class="d-flex justify-content-between align-items-start">
@@ -1864,7 +2054,7 @@
         }
 
         // Apply suggestion from a report directly to the artifact metadata
-        async function applySuggestion(artifactUuid, artifactId, suggestedReg, suggestedSub) {
+        async function applySuggestion(buttonEl, artifactUuid, artifactId, suggestedReg, suggestedSub) {
             if (!suggestedReg && !suggestedSub) {
                 showToast('No suggestion provided', 'warning');
                 return;
@@ -1873,11 +2063,45 @@
             const confirmMsg = `Apply suggested values and resolve reports?\n${suggestedReg ? 'Reg: ' + suggestedReg + '\n' : ''}${suggestedSub ? 'Subject: ' + suggestedSub : ''}`;
             if (!(await showConfirm(confirmMsg, 'Apply Suggestion & Resolve'))) return;
 
+            const btn = buttonEl || null;
+            const originalText = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+                btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Applying...';
+            }
+
             try {
+                let currentFilename = '';
+                let currentParsedReg = '';
+                let currentParsedSub = '';
+                try {
+                    const detailRes = await fetch(`/admin/artifacts/${encodeURIComponent(artifactUuid)}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+                    if (detailRes.ok) {
+                        const artifact = await detailRes.json();
+                        currentFilename = artifact.original_filename || artifact.raw_filename || artifact.filename || '';
+                        currentParsedReg = artifact.parsed_reg_no || '';
+                        currentParsedSub = artifact.parsed_subject_code || '';
+                    }
+                } catch (e) {
+                    console.warn('Could not load artifact details for filename update', e);
+                }
+
+                const filenameMatch = currentFilename.match(/\.(pdf|jpg|jpeg|png)$/i);
+                const ext = filenameMatch ? filenameMatch[1].toLowerCase() : '';
+                const fallbackParts = currentFilename.replace(/\.(pdf|jpg|jpeg|png)$/i, '').split('_');
+                const fallbackReg = fallbackParts[0] || '';
+                const fallbackSub = fallbackParts[1] || '';
+
+                const nextReg = suggestedReg || currentParsedReg || fallbackReg;
+                const nextSub = suggestedSub || currentParsedSub || fallbackSub;
+
+                const nextFilename = (nextReg && nextSub && ext) ? `${nextReg}_${nextSub}.${ext}` : null;
+
                 const payload = {
                     parsed_reg_no: suggestedReg || null,
                     parsed_subject_code: suggestedSub || null,
-                    original_filename: null,
+                    original_filename: nextFilename,
                     resolve_reports: true  // Auto-resolve reports when applying suggestion
                 };
 
@@ -1893,15 +2117,30 @@
                 const data = await res.json();
                 if (res.ok) {
                     showToast(data.message || 'Suggestion applied', 'success');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.classList.add('disabled');
+                        btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Applied';
+                    }
                     // Refresh reports and listing
                     viewReports(artifactUuid, artifactId);
                     loadPendingFiles();
                 } else {
                     showToast(data.detail || data.message || 'Failed to apply suggestion', 'danger');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.classList.remove('disabled');
+                        btn.innerHTML = originalText;
+                    }
                 }
             } catch (err) {
                 console.error('Error applying suggestion', err);
                 showToast('Error applying suggestion', 'danger');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('disabled');
+                    btn.innerHTML = originalText;
+                }
             }
         }
 
