@@ -90,8 +90,7 @@ react-app/
 ### 1. Clone/Download the Project
 
 ```bash
-cd d:\lms-paper\react-app
-# or your project directory
+cd c:\paper\react-app
 ```
 
 ### 2. Install Dependencies
